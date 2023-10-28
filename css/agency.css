@@ -1156,3 +1156,7 @@ img.hero-dev {
 .reveal {
   opacity: 1;
 }
+
+:root {
+  color-scheme: only light;
+}
