@@ -1,10 +1,14 @@
 # Mahmoud Hafez portfolio
 
-Personal site, served by GitHub Pages from the `main` branch: https://hafeztheanalyst.github.io/Portfolio/
+Personal site, served by GitHub Pages from the `docs` folder of the `main` branch: https://hafeztheanalyst.github.io/Portfolio/
+
+GitHub Pages for this repository is set to **main / docs** (Settings > Pages). Keep the site files inside `docs/` and leave that setting as it is.
 
 Plain HTML, CSS and JavaScript. There is no build step and no framework, so any file can be edited directly.
 
 ## Layout
+
+All paths below are inside `docs/`.
 
 | Path | What it is |
 |---|---|
@@ -21,17 +25,17 @@ Plain HTML, CSS and JavaScript. There is no build step and no framework, so any 
 
 1. Copy the closest page in `projects/` (for example `sales-analysis.html`) and rename it.
 2. Change the title, the three facts, the text and the screenshots.
-3. Put the screenshots in `images/Projects/<project-name>/`.
+3. Put the screenshots in `docs/images/Projects/<project-name>/`.
 4. Add a card for it on the home page: copy one `<a class="card">` block in `index.html` (section `id="projects"`) and point it at the new page.
 5. Update the "Next" link at the bottom of the previous project page so it leads to the new one.
 
 **Update the CV**
 
-Replace `assets/Mahmoud_Hafez_CV.pdf` with the new file and keep the same file name. Every download button picks it up.
+Replace `docs/assets/Mahmoud_Hafez_CV.pdf` with the new file and keep the same file name. Every download button picks it up.
 
 **Change the colours**
 
-Edit the values under `:root` (light) and `:root[data-theme="dark"]` (dark) at the top of `css/site.css`.
+Edit the values under `:root` (light) and `:root[data-theme="dark"]` (dark) at the top of `docs/css/site.css`.
 
 **Change a number**
 
@@ -40,4 +44,4 @@ The headline results on the home page are in the `results` section and in each c
 ## Notes
 
 - The case studies describe work for an employer in general terms only. Keep internal tool names, data, screenshots and detection details out of this repository.
-- The charts and network illustrations use made-up data generated in `js/site.js`.
+- The charts and network illustrations use made-up data generated in `docs/js/site.js`.
