@@ -185,172 +185,204 @@
     });
   });
 
-  /* ---------- Hero scatter plot: noise settles into a trend, outliers get flagged ---------- */
-  var svg = document.getElementById('plot');
+  /* ---------- Section dots on the home page ---------- */
+  var dots = document.querySelector('.dots');
+  var screens = document.querySelectorAll('.screen[id]');
+  if (dots && screens.length && 'IntersectionObserver' in window) {
+    var links = {};
+    screens.forEach(function (s) {
+      var a = document.createElement('a');
+      a.href = '#' + s.id;
+      a.title = s.dataset.label || s.id;
+      a.setAttribute('aria-label', a.title);
+      dots.appendChild(a);
+      links[s.id] = a;
+    });
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        for (var k in links) links[k].classList.toggle('on', k === entry.target.id);
+      });
+    }, { threshold: 0.5 });
+    screens.forEach(function (s) { spy.observe(s); });
+  }
+
+  /* ---------- One scroll step moves one full section (large screens only) ---------- */
+  var snapQuery = window.matchMedia('(min-width: 1024px) and (min-height: 660px)');
+  if (root.classList.contains('home') && screens.length && !reduce) {
+    var HEADER = 62, lockedUntil = 0, lastWheel = 0;
+    var tops = function () { return Array.prototype.map.call(screens, function (s) { return s.offsetTop - HEADER; }); };
+    var currentIndex = function () {
+      var t = tops(), best = 0;
+      for (var i = 0; i < t.length; i++) if (Math.abs(t[i] - window.scrollY) < Math.abs(t[best] - window.scrollY)) best = i;
+      return best;
+    };
+    var go = function (dir) {
+      var t = tops(), i = currentIndex(), maxY = document.documentElement.scrollHeight - window.innerHeight;
+      var atFooter = window.scrollY > t[t.length - 1] + 8;
+      var target;
+      if (dir > 0) target = (i === t.length - 1) ? maxY : t[i + 1];
+      else target = atFooter ? t[t.length - 1] : t[Math.max(0, i - 1)];
+      if (Math.abs(target - window.scrollY) < 2) return;
+      lockedUntil = Date.now() + 700;
+      window.scrollTo({ top: target, behavior: 'smooth' });
+    };
+    var fits = function () { return screens[currentIndex()].offsetHeight <= window.innerHeight - HEADER + 4; };
+    window.addEventListener('wheel', function (e) {
+      if (!snapQuery.matches || e.ctrlKey || !fits()) return;
+      e.preventDefault();
+      var now = Date.now(), quiet = now - lastWheel > 140;
+      lastWheel = now;
+      // Ignore the tail of a trackpad swipe; act once per gesture.
+      if (now < lockedUntil || (!quiet && now < lockedUntil + 400)) return;
+      if (Math.abs(e.deltaY) < 4) return;
+      go(e.deltaY > 0 ? 1 : -1);
+    }, { passive: false });
+    window.addEventListener('keydown', function (e) {
+      if (!snapQuery.matches || !fits() || e.altKey || e.ctrlKey || e.metaKey) return;
+      var tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+      var dir = 0;
+      if (e.key === 'ArrowDown' || e.key === 'PageDown' || (e.key === ' ' && !e.shiftKey && tag !== 'button' && tag !== 'a')) dir = 1;
+      if (e.key === 'ArrowUp' || e.key === 'PageUp' || (e.key === ' ' && e.shiftKey)) dir = -1;
+      if (!dir) return;
+      e.preventDefault();
+      if (Date.now() >= lockedUntil) go(dir);
+    });
+  }
+
+  /* ---------- Headline: words arrive one after another ---------- */
+  var headline = document.getElementById('headline');
+  if (headline && !reduce) {
+    var label = headline.textContent;
+    headline.setAttribute('aria-label', label);
+    headline.innerHTML = label.split(' ').map(function (w, i) {
+      return '<span class="w" aria-hidden="true" style="animation-delay:' + (0.15 + i * 0.07).toFixed(2) + 's">' + w + '</span>';
+    }).join(' ');
+  }
+
+  /* ---------- Risk desk: a simulated price chart with trades, flags and live counters ---------- */
+  var svg = document.getElementById('candles');
   if (!svg) return;
 
-  var W = 560, H = 400;
-  var M = { l: 44, r: 16, t: 14, b: 40 };
-  var PW = W - M.l - M.r, PH = H - M.t - M.b;
-  var N = 140;
-  var tip = document.getElementById('tip');
-  var outN = document.getElementById('r-n');
-  var outFit = document.getElementById('r-fit');
-  var outFlag = document.getElementById('r-flag');
-  var timers = [];
+  var W = 560, H = 270, PADR = 44, TOP = 26, BOT = 26;
+  var N = 40, STEP = (W - PADR) / N, BW = STEP * 0.62;
+  var lo = 1.0740, hi = 1.0860;
+  function py(p) { return TOP + (1 - (p - lo) / (hi - lo)) * (H - TOP - BOT); }
 
-  function gauss() {
-    var u = 0, v = 0;
-    while (u === 0) u = Math.random();
-    while (v === 0) v = Math.random();
-    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  var candles = [], price = 1.0790, serial = 0;
+  var stats = { trades: 0, flags: 0, rules: [0, 0, 0] };
+
+  function nextCandle() {
+    var o = price;
+    var c = o + (1.0800 - price) * 0.12 + (Math.random() - 0.5) * 0.0042;
+    c = clamp(c, lo + 0.0022, hi - 0.0022);
+    var k = {
+      id: serial++, o: o, c: c,
+      h: Math.max(o, c) + Math.random() * 0.0012,
+      l: Math.min(o, c) - Math.random() * 0.0012,
+      trade: null
+    };
+    price = c;
+    if (Math.random() < 0.3) {
+      k.trade = { buy: Math.random() < 0.5, flag: Math.random() < 0.3 };
+      stats.trades += 1 + Math.floor(Math.random() * 6);
+      if (k.trade.flag) { stats.flags++; stats.rules[Math.floor(Math.random() * 3)]++; }
+    }
+    return k;
   }
-  function later(fn, ms) { timers.push(setTimeout(fn, reduce ? 0 : ms)); }
 
-  function makeData() {
-    var slope = 0.55 + Math.random() * 0.2;
-    var base = 0.12 + Math.random() * 0.08;
-    var pts = [];
-    for (var i = 0; i < N; i++) {
-      var x = 0.04 + Math.random() * 0.92;
-      pts.push({ x: x, y: base + slope * x + gauss() * 0.055 });
+  var gGrid = el('g', {}), gRoll = el('g', { 'class': 'roll' }), gCross = el('g', {});
+  svg.appendChild(gGrid); svg.appendChild(gRoll); svg.appendChild(gCross);
+  for (var g = 0; g < 5; g++) {
+    var level = lo + (hi - lo) * (g + 0.5) / 5;
+    gGrid.appendChild(el('line', { 'class': 'gridline', x1: 0, x2: W - PADR + 6, y1: py(level), y2: py(level) }));
+    var txt = el('text', { 'class': 'price', x: W - 2, y: py(level) + 3, 'text-anchor': 'end' });
+    txt.textContent = level.toFixed(4);
+    gGrid.appendChild(txt);
+  }
+
+  function drawCandle(k, i, delay) {
+    var x = i * STEP + STEP / 2;
+    var body = el('g', { 'class': 'c ' + (k.c >= k.o ? 'up' : 'dn') });
+    if (delay == null) body.style.animation = 'none'; else body.style.animationDelay = delay + 's';
+    body.appendChild(el('line', { 'class': 'wick', x1: x, x2: x, y1: py(k.h), y2: py(k.l) }));
+    body.appendChild(el('rect', { x: x - BW / 2, width: BW, y: py(Math.max(k.o, k.c)), height: Math.max(1.5, Math.abs(py(k.o) - py(k.c))), rx: 1.5 }));
+    gRoll.appendChild(body);
+    if (!k.trade) return;
+    var my = k.trade.buy ? py(k.l) + 11 : py(k.h) - 11;
+    var d = k.trade.buy ? 'M' + x + ',' + (my - 5) + ' l5,8 l-10,0z' : 'M' + x + ',' + (my + 5) + ' l5,-8 l-10,0z';
+    var mark = el('path', { 'class': 'mark' + (k.trade.flag ? ' flag' : ''), d: d });
+    if (delay != null && !reduce) {
+      mark.style.opacity = 0;
+      setTimeout(function () { mark.style.opacity = 1; }, delay * 1000 + 300);
     }
-    // A handful of accounts that do not behave like the rest.
-    var k = 5 + Math.floor(Math.random() * 4);
-    for (var j = 0; j < k; j++) {
-      var p = pts[Math.floor(Math.random() * N)];
-      var dir = p.x > 0.5 ? -1 : 1;
-      if (Math.random() < 0.3) dir = -dir;
-      p.y += dir * (0.24 + Math.random() * 0.16);
+    gRoll.appendChild(mark);
+    if (k.trade.flag) {
+      var ring = el('circle', { 'class': 'ring', cx: x, cy: my, r: 10 });
+      if (delay == null) ring.style.animation = 'none'; else ring.style.animationDelay = (delay + 0.35) + 's';
+      gRoll.appendChild(ring);
     }
-    pts.forEach(function (p) {
-      p.y = clamp(p.y, 0.03, 0.97);
-      p.id = 'AC-' + String(1000 + Math.floor(Math.random() * 9000));
+  }
+
+  function render(firstLoad) {
+    while (gRoll.firstChild) gRoll.removeChild(gRoll.firstChild);
+    candles.forEach(function (k, i) {
+      var delay = null;
+      if (!reduce) delay = firstLoad ? i * 0.035 : (i === candles.length - 1 ? 0 : null);
+      drawCandle(k, i, delay);
     });
-    return pts;
   }
 
-  function analyse(pts) {
-    // Fit, drop anything beyond 2.5 sigma, then fit again on the rest.
-    function fit(list) {
-      var n = list.length, sx = 0, sy = 0, sxx = 0, sxy = 0;
-      list.forEach(function (p) { sx += p.x; sy += p.y; sxx += p.x * p.x; sxy += p.x * p.y; });
-      var b = (n * sxy - sx * sy) / (n * sxx - sx * sx);
-      var a = (sy - b * sx) / n;
-      var ss = 0, st = 0, my = sy / n;
-      list.forEach(function (p) { var r = p.y - (a + b * p.x); ss += r * r; st += (p.y - my) * (p.y - my); });
-      return { a: a, b: b, sd: Math.sqrt(ss / (n - 2)), r2: 1 - ss / st };
-    }
-    var f = fit(pts);
-    for (var pass = 0; pass < 2; pass++) {
-      f = fit(pts.filter(function (p) { return Math.abs(p.y - (f.a + f.b * p.x)) <= 2.5 * f.sd; }));
-    }
-    pts.forEach(function (p) {
-      p.z = (p.y - (f.a + f.b * p.x)) / f.sd;
-      p.out = Math.abs(p.z) > 3;
+  function setText(id, v) { document.getElementById(id).textContent = v; }
+  function showStats() {
+    setText('k-trades', stats.trades);
+    setText('k-flags', stats.flags);
+    setText('k-rate', (stats.trades ? stats.flags / stats.trades * 100 : 0).toFixed(1) + '%');
+    var max = Math.max(1, Math.max.apply(null, stats.rules));
+    stats.rules.forEach(function (n, i) {
+      setText('n' + i, n);
+      document.getElementById('b' + i).style.transform = 'scaleX(' + (n / max) + ')';
     });
-    return f;
   }
 
-  function sx(v) { return M.l + v * PW; }
-  function sy(v) { return M.t + (1 - v) * PH; }
+  // First load: draw the history candle by candle, then go live.
+  for (var i = 0; i < N; i++) candles.push(nextCandle());
+  render(true);
+  setTimeout(showStats, reduce ? 0 : 1500);
 
-  function countTo(node, target, decimals, ms) {
-    if (reduce) { node.textContent = target.toFixed(decimals); return; }
-    var start = performance.now();
-    (function tick(now) {
-      var t = clamp((now - start) / ms, 0, 1);
-      node.textContent = (target * (1 - Math.pow(1 - t, 3))).toFixed(decimals);
-      if (t < 1) requestAnimationFrame(tick);
-    })(start);
+  var visible = true;
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; }).observe(svg);
   }
-
-  function showTip(p) {
-    var frame = svg.getBoundingClientRect();
-    var scale = frame.width / W;
-    tip.innerHTML = '<b>' + p.id + '</b> ' + (p.out
-      ? 'is ' + Math.abs(p.z).toFixed(1) + ' standard deviations off the trend'
-      : 'follows the trend');
-    tip.style.left = clamp(sx(p.x) * scale, 90, frame.width - 90) + 'px';
-    tip.style.top = sy(p.y) * scale + 'px';
-    tip.hidden = false;
-  }
-  function hideTip() { tip.hidden = true; }
-
-  function run() {
-    timers.forEach(clearTimeout);
-    timers = [];
-    hideTip();
-    while (svg.firstChild) svg.removeChild(svg.firstChild);
-
-    var pts = makeData();
-    var f = analyse(pts);
-
-    var grid = el('g', { 'class': 'grid' });
-    for (var g = 1; g <= 4; g++) {
-      grid.appendChild(el('line', { x1: M.l, x2: W - M.r, y1: sy(g / 5), y2: sy(g / 5) }));
-      grid.appendChild(el('line', { y1: M.t, y2: H - M.b, x1: sx(g / 5), x2: sx(g / 5) }));
+  function tick() {
+    if (visible && !document.hidden) {
+      candles.push(nextCandle());
+      candles.shift();
+      // Put the row one step to the right without animation, then let it roll back into place.
+      gRoll.style.transition = 'none';
+      render(false);
+      gRoll.style.transform = 'translateX(' + STEP + 'px)';
+      gRoll.getBoundingClientRect();
+      gRoll.style.transition = '';
+      gRoll.style.transform = 'translateX(0)';
+      showStats();
     }
-    svg.appendChild(grid);
-    svg.appendChild(el('line', { 'class': 'axis', x1: M.l, x2: W - M.r, y1: H - M.b, y2: H - M.b }));
-    svg.appendChild(el('line', { 'class': 'axis', x1: M.l, x2: M.l, y1: M.t, y2: H - M.b }));
-    var xl = el('text', { 'class': 'axis-label', x: W - M.r, y: H - 12, 'text-anchor': 'end' });
-    xl.textContent = 'Trading activity';
-    var yl = el('text', { 'class': 'axis-label', x: 14, y: M.t, 'text-anchor': 'end', transform: 'rotate(-90 14 ' + M.t + ')' });
-    yl.textContent = 'Result';
-    svg.appendChild(xl);
-    svg.appendChild(yl);
-
-    var trend = el('line', { 'class': 'trend', x1: sx(0), y1: sy(clamp(f.a, 0, 1)), x2: sx(1), y2: sy(clamp(f.a + f.b, 0, 1)) });
-    svg.appendChild(trend);
-
-    var rings = el('g', {}), dots = el('g', {});
-    svg.appendChild(rings);
-    svg.appendChild(dots);
-
-    pts.forEach(function (p) {
-      var c = el('circle', { 'class': 'pt', cx: sx(p.x), cy: sy(p.y), r: 4.2, tabindex: p.out ? 0 : -1 });
-      // Start scattered at random, then settle into the real position.
-      var dx = M.l + Math.random() * PW - sx(p.x);
-      var dy = M.t + Math.random() * PH - sy(p.y);
-      if (!reduce) c.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
-      c.style.transitionDelay = (Math.random() * 0.35).toFixed(2) + 's, 0s';
-      c.addEventListener('mouseenter', function () { showTip(p); });
-      c.addEventListener('focus', function () { showTip(p); });
-      c.addEventListener('mouseleave', hideTip);
-      c.addEventListener('blur', hideTip);
-      p.node = c;
-      dots.appendChild(c);
-      if (p.out) {
-        p.ring = el('circle', { 'class': 'ring', cx: sx(p.x), cy: sy(p.y), r: 11 });
-        rings.appendChild(p.ring);
-      }
-    });
-
-    outN.textContent = '0';
-    outFit.textContent = '0.00';
-    outFlag.textContent = '0';
-
-    // The sequence: settle, fit, flag.
-    later(function () {
-      pts.forEach(function (p) { p.node.style.transform = 'translate(0px,0px)'; p.node.classList.add('settled'); });
-      countTo(outN, N, 0, 900);
-    }, 350);
-    later(function () {
-      trend.classList.add('on');
-      countTo(outFit, f.r2, 2, 800);
-    }, 1750);
-    later(function () {
-      pts.filter(function (p) { return p.out; }).forEach(function (p, i) {
-        later(function () {
-          p.node.classList.add('out');
-          p.ring.classList.add('on');
-          outFlag.textContent = String(i + 1);
-        }, i * 140);
-      });
-    }, 2750);
+    setTimeout(tick, 1300);
   }
+  if (!reduce) setTimeout(tick, 2600);
 
-  document.getElementById('rerun').addEventListener('click', run);
-  run();
+  // Crosshair with open, high, low and close.
+  var ohlc = document.getElementById('ohlc');
+  function clearCross() { while (gCross.firstChild) gCross.removeChild(gCross.firstChild); }
+  svg.addEventListener('mousemove', function (e) {
+    var r = svg.getBoundingClientRect();
+    var mx = (e.clientX - r.left) / r.width * W, my = (e.clientY - r.top) / r.height * H;
+    var idx = clamp(Math.floor(mx / STEP), 0, N - 1), k = candles[idx];
+    clearCross();
+    gCross.appendChild(el('line', { 'class': 'cross', x1: idx * STEP + STEP / 2, x2: idx * STEP + STEP / 2, y1: TOP - 8, y2: H - BOT + 8 }));
+    gCross.appendChild(el('line', { 'class': 'cross', x1: 0, x2: W - PADR + 6, y1: my, y2: my }));
+    ohlc.innerHTML = 'O <b>' + k.o.toFixed(4) + '</b>H <b>' + k.h.toFixed(4) + '</b>L <b>' + k.l.toFixed(4) + '</b>C <b>' + k.c.toFixed(4) + '</b>';
+  });
+  svg.addEventListener('mouseleave', function () { clearCross(); ohlc.innerHTML = ''; });
 })();

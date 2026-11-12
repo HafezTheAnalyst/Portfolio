@@ -43,5 +43,7 @@ The headline results on the home page are in the `results` section and in each c
 
 ## Notes
 
+- On large screens the home page is split into full-screen sections (each `<section class="screen">` in `index.html`) and one scroll step moves one section. Keep each section short enough to fit one screen. Phones and small windows scroll normally.
+
 - The case studies describe work for an employer in general terms only. Keep internal tool names, data, screenshots and detection details out of this repository.
 - The charts and network illustrations use made-up data generated in `docs/js/site.js`.
