@@ -349,21 +349,23 @@ a:hover .more svg, .more:hover svg { transform: translateX(4px); }
 .dots a:hover::before { background: var(--ink); }
 .dots a.on::before { background: var(--amber); transform: scale(1.6); }
 
-@media (min-width: 1024px) and (min-height: 660px) {
-  html.home { scroll-snap-type: y mandatory; scroll-padding-top: 62px; }
-  .home .screen { min-height: calc(100vh - 62px); min-height: calc(100svh - 62px); scroll-snap-align: start; display: flex; align-items: center; padding: 26px 0; }
-  .home .screen > .shell { width: 100%; }
-  .home .foot { scroll-snap-align: end; }
-  .home .dots { display: flex; }
-  .home .results > div { padding-top: 18px; padding-bottom: 18px; }
-  .home .about-title { margin-top: 28px; }
-  .home .split { margin-top: 20px; }
-  .home .also { margin-top: 20px; padding: 14px 20px; }
-  .home .screen .sub { margin-bottom: 24px; }
-  .home .minor { margin-top: 26px; padding-top: 14px; padding-bottom: 14px; }
-  .home .confidential { margin-top: 14px; }
-  .home .card-img { aspect-ratio: 16 / 9; }
-}
+/* Full-screen mode. site.js adds .snap to <html> when the window is large enough. */
+html.snap { scroll-snap-type: y mandatory; scroll-padding-top: 62px; }
+.snap .screen { min-height: calc(100vh - 62px); min-height: calc(100svh - 62px); scroll-snap-align: start; display: flex; align-items: center; padding: 26px 0; }
+.snap .screen > .shell { width: 100%; }
+.snap .foot { scroll-snap-align: end; }
+.snap .dots { display: flex; }
+.snap .results > div { padding-top: 18px; padding-bottom: 18px; }
+.snap .about-title { margin-top: 28px; }
+.snap .split { margin-top: 20px; }
+.snap .also { margin-top: 20px; padding: 14px 20px; }
+.snap .screen .sub { margin-bottom: 24px; }
+.snap .minor { margin-top: 26px; padding-top: 14px; padding-bottom: 14px; }
+.snap .confidential { margin-top: 14px; }
+.snap .card-img { aspect-ratio: 16 / 9; }
+.snap .screen { padding: 20px 0; overflow: hidden; }
+.snap .screen > .shell { opacity: 0; transform: translateY(30px); transition: opacity 0.55s ease, transform 0.75s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.snap .screen.active > .shell { opacity: 1; transform: none; }
 
 /* Reveal on scroll */
 .js [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); transition-delay: var(--d, 0s); }
@@ -411,5 +413,4 @@ a:hover .more svg, .more:hover svg { transform: translateX(4px); }
   .js [data-reveal] { opacity: 1; transform: none; }
   .js #headline .w { opacity: 1; transform: none; animation: none; }
   #candles .c, #candles .ring, .live i { animation: none; }
-  html.home { scroll-snap-type: none; }
 }
