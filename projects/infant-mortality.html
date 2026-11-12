@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What drives infant mortality in high-GDP countries | Mahmoud Hafez</title>
+  <meta name="description" content="A Tableau data story covering the three highest-GDP countries in each region from 2000 to 2012.">
+  <meta property="og:title" content="What drives infant mortality in high-GDP countries | Mahmoud Hafez">
+  <meta property="og:description" content="A Tableau data story covering the three highest-GDP countries in each region from 2000 to 2012.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="../images/logo.png">
+  <script>
+    (function () {
+      var d = document.documentElement;
+      d.classList.add('js');
+      var t = null;
+      try { t = localStorage.getItem('theme'); } catch (e) {}
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      d.dataset.theme = t;
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="progress" aria-hidden="true"></div>
+
+  <header class="top">
+    <div class="shell top-row">
+      <a class="brand" href="../index.html">Mahmoud Hafez</a>
+      <nav aria-label="Sections">
+        <a href="../index.html#work">Work</a>
+        <a href="../index.html#projects">Projects</a>
+        <a href="../index.html#tools">Tools</a>
+        <a href="../index.html#path">Experience</a>
+        <a href="../index.html#certificates">Certificates</a>
+        <a href="../index.html#contact">Contact</a>
+      </nav>
+      <button class="theme" id="theme" type="button" aria-label="Dark mode" aria-pressed="false">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+      <a class="cv" href="../assets/Mahmoud_Hafez_CV.pdf" download>Download CV</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="shell page-head">
+      <a class="back" href="../index.html#projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>All projects</a>
+      <span class="role-tag" style="display:table">Personal project</span>
+      <h1>What drives infant mortality in high-GDP countries</h1>
+      <p class="lede">A Tableau data story covering the three highest-GDP countries in each region from 2000 to 2012.</p>
+      <dl class="facts"><div><dt>Type</dt><dd>Personal project</dd></div><div><dt>Period</dt><dd>2000 to 2012</dd></div><div><dt>Tools</dt><dd>Tableau</dd></div></dl>
+    </section>
+
+    <section class="shell block" style="padding-top:0">
+      <div class="story">
+        <div class="story-text" data-reveal>
+          <section><h2>The question</h2>
+            <p>In the richest countries of each region, which factors move with infant mortality: birth rate, health spending per person, health spending as a share of GDP, population or GDP itself?</p></section>
+          <section><h2>What I did</h2>
+            <ul class="ticks">
+              <li>Built an interactive Tableau dashboard on the health measures</li>
+              <li>Turned it into a guided story, so a reader follows the argument page by page</li>
+              <li>Set up filters for healthcare, public health and general readers</li>
+            </ul></section>
+          <p><a class="btn btn-solid" href="https://public.tableau.com/app/profile/mahmoud.hafez6387/viz/InfantMortalityDatastory/Story1">Open the story on Tableau Public <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></p>
+        </div>
+        <div class="story-viz" data-reveal style="--d:.15s">
+          <div data-viewer>
+          <div class="stage"><img src="../images/Projects/Infant_Mortality/Infant_Mortality-2.JPG" alt="Infant mortality data story, page 2"></div>
+          <div class="tabs" role="group" aria-label="Story pages">
+            <button type="button" aria-pressed="false" data-src="../images/Projects/Infant_Mortality/Infant_Mortality-1.JPG" data-alt="Infant mortality data story, page 1">Page 1</button>
+            <button type="button" aria-pressed="true" data-src="../images/Projects/Infant_Mortality/Infant_Mortality-2.JPG" data-alt="Infant mortality data story, page 2">Page 2</button>
+            <button type="button" aria-pressed="false" data-src="../images/Projects/Infant_Mortality/Infant_Mortality-3.JPG" data-alt="Infant mortality data story, page 3">Page 3</button>
+            <button type="button" aria-pressed="false" data-src="../images/Projects/Infant_Mortality/Infant_Mortality-4.JPG" data-alt="Infant mortality data story, page 4">Page 4</button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell" style="padding-bottom:clamp(56px,8vw,96px)">
+      <a class="next" href="yelp-analysis.html">
+        <span><small>Next</small><strong>Top-rated businesses in the Yelp dataset</strong></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="shell foot-row">
+      <span>© <span id="year">2026</span> Mahmoud Hafez</span>
+      <a href="#main">Back to top</a>
+    </div>
+  </footer>
+
+  <script src="../js/site.js"></script>
+</body>
+</html>

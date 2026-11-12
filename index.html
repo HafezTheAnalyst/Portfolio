@@ -4,30 +4,46 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mahmoud Hafez | Data and Risk Analyst</title>
-  <meta name="description" content="Mahmoud Hafez is a data analyst working in risk and trading operations. Python, SQL, Tableau and Power BI projects, experience and certificates.">
+  <meta name="description" content="Mahmoud Hafez is a data analyst working in risk and trading operations. Case studies, Python, SQL, Tableau and Power BI projects, experience and certificates.">
   <meta property="og:title" content="Mahmoud Hafez | Data and Risk Analyst">
-  <meta property="og:description" content="Data analyst working in risk and trading operations. Python, SQL, Tableau, Power BI.">
+  <meta property="og:description" content="Mahmoud Hafez is a data analyst working in risk and trading operations. Case studies, Python, SQL, Tableau and Power BI projects, experience and certificates.">
   <meta property="og:type" content="website">
   <link rel="icon" href="images/logo.png">
+  <script>
+    (function () {
+      var d = document.documentElement;
+      d.classList.add('js');
+      var t = null;
+      try { t = localStorage.getItem('theme'); } catch (e) {}
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      d.dataset.theme = t;
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
+  <div class="progress" aria-hidden="true"></div>
 
   <header class="top">
     <div class="shell top-row">
-      <a class="brand" href="#main">Mahmoud Hafez</a>
+      <a class="brand" href="index.html">Mahmoud Hafez</a>
       <nav aria-label="Sections">
-        <a href="#work">What I do</a>
-        <a href="#projects">Projects</a>
-        <a href="#tools">Tools</a>
-        <a href="#path">Experience</a>
-        <a href="#certificates">Certificates</a>
-        <a class="nav-contact" href="#contact">Contact</a>
+        <a href="index.html#work">Work</a>
+        <a href="index.html#projects">Projects</a>
+        <a href="index.html#tools">Tools</a>
+        <a href="index.html#path">Experience</a>
+        <a href="index.html#certificates">Certificates</a>
+        <a href="index.html#contact">Contact</a>
       </nav>
+      <button class="theme" id="theme" type="button" aria-label="Dark mode" aria-pressed="false">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+      <a class="cv" href="assets/Mahmoud_Hafez_CV.pdf" download>Download CV</a>
     </div>
   </header>
 
@@ -40,10 +56,10 @@
           <span><strong>Mahmoud Hafez</strong>Data and risk analyst, Cairo</span>
         </p>
         <h1>I find what the data is saying, and what it is hiding.</h1>
-        <p class="lede">For the past three years I've worked in risk and trading operations at a proprietary trading firm, where I analyse trader behaviour, automate reporting and build detection tools in Python and SQL.</p>
+        <p class="lede">For the past three years I've worked in risk and trading operations at a proprietary trading firm, where I analyse trader behaviour, automate reviews and reporting, and build detection tools in Python and SQL.</p>
         <div class="actions">
-          <a class="btn btn-solid" href="#projects">See my projects</a>
-          <a class="btn btn-line" href="mailto:mahmoud.hafez.mh.2023@gmail.com">Email me</a>
+          <a class="btn btn-solid" href="#work">See my work</a>
+          <a class="btn btn-line" href="assets/Mahmoud_Hafez_CV.pdf" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M6 11l6 6 6-6M5 20h14"/></svg>Download CV</a>
         </div>
       </div>
 
@@ -64,146 +80,182 @@
       </figure>
     </section>
 
-    <section id="work" class="band">
+    <section class="shell" aria-label="Results at a glance">
+      <div class="results">
+        <div data-reveal><strong><span data-count="90">90</span>%</strong><span>faster trading-rule reviews after I automated them</span></div>
+        <div data-reveal style="--d:.1s"><strong><span data-count="3">3</span><small>min</small></strong><span>to compare a group of 20 traders and get a full evidence report</span></div>
+        <div data-reveal style="--d:.2s"><strong><span data-count="3">3</span><small>years</small></strong><span>in risk and trading operations at a proprietary trading firm</span></div>
+      </div>
+    </section>
+
+    <section id="about" class="shell block">
+      <h2 data-reveal>Two kinds of work, one habit of mind</h2>
+      <div class="split">
+        <article data-reveal>
+          <h3>Data analysis</h3>
+          <p>Taking a business question, finding the data that answers it and presenting the answer so someone can act on it.</p>
+          <ul class="ticks">
+            <li>Cleaning and combining messy sources in Python, R and Excel</li>
+            <li>Analysis in SQL on PostgreSQL and ClickHouse</li>
+            <li>Dashboards and data stories in Tableau and Power BI</li>
+            <li>Reports that end with a recommendation, not just a chart</li>
+          </ul>
+        </article>
+        <article data-reveal style="--d:.12s">
+          <h3>Risk and trading operations</h3>
+          <p>Watching how traders behave across MT5 and MatchTrader accounts and catching the patterns that break the rules.</p>
+          <ul class="ticks">
+            <li>Monitoring trading activity against firm rules</li>
+            <li>Detecting copy trading, hedging and linked accounts</li>
+            <li>Automating account reviews and management reporting</li>
+            <li>Leading a back-office team through payouts and account operations</li>
+          </ul>
+        </article>
+      </div>
+      <p class="also" data-reveal><strong>And the everyday part:</strong> answering one-off data questions from across the business, from a quick SQL pull to a full breakdown.</p>
+    </section>
+
+    <section id="work" class="band ink">
       <div class="shell">
-        <h2>Two kinds of work, one habit of mind</h2>
-        <div class="split">
-          <article>
-            <h3>Data analysis</h3>
-            <p>Taking a business question, finding the data that answers it and presenting the answer so someone can act on it.</p>
-            <ul>
-              <li>Cleaning and combining messy sources in Python, R and Excel</li>
-              <li>Analysis in SQL on PostgreSQL and ClickHouse</li>
-              <li>Dashboards and data stories in Tableau and Power BI</li>
-              <li>Reports that end with a recommendation, not just a chart</li>
+        <h2 data-reveal>Work at City Traders Imperium</h2>
+        <p class="sub" data-reveal>Tools I designed and built as a risk analyst, and what changed because of them.</p>
+
+        <div class="cases">
+          <a class="case" href="projects/trading-rule-review.html" data-reveal>
+            <div>
+              <span class="role-tag">Designed and built</span>
+              <h3>Automated trading-rule review</h3>
+              <p>Checks an account's full trade history against every trading rule, from risk per trade to hedging and copy trading.</p>
+              <div class="outcome"><strong>90% faster</strong><span>about 20 minutes down to about 2</span></div>
+              <span class="more">Read the case study <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            </div>
+            <div class="case-viz">
+            <div class="bars" data-viz>
+              <div class="bar"><span class="bar-label">Manual review</span><span class="bar-val">about 20 min</span><span class="bar-track"><span class="bar-fill" style="--w:100%"></span></span></div>
+              <div class="bar after"><span class="bar-label">Automated review</span><span class="bar-val">about 2 min</span><span class="bar-track"><span class="bar-fill" style="--w:10%"></span></span></div>
+            </div>
+            <ul class="chips" aria-label="Rules checked">
+              <li>Risk per trade</li><li>Risk per trade idea</li><li>Hedging</li><li>Copy trading</li><li>Other firm rules</li>
             </ul>
-          </article>
-          <article>
-            <h3>Risk and trading operations</h3>
-            <p>Watching how traders behave across MT5 and MatchTrader accounts and catching the patterns that break the rules.</p>
-            <ul>
-              <li>Monitoring trading activity against firm rules</li>
-              <li>Detecting copy trading, hedging between accounts and shared devices or IPs</li>
-              <li>Automating checks and weekly management reporting</li>
-              <li>Leading a back-office team through payouts and account operations</li>
-            </ul>
-          </article>
+            </div>
+          </a>
+
+          <a class="case" href="projects/group-trading-detection.html" data-reveal>
+            <div>
+              <span class="role-tag">Designed and built</span>
+              <h3>Group trading detection</h3>
+              <p>Compares the trading activity of any group of traders and scores how closely each pair is connected.</p>
+              <div class="outcome"><strong>3 minutes</strong><span>for a full report on 10 or 20 traders</span></div>
+              <span class="more">Read the case study <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            </div>
+            <div class="case-viz">
+            <svg data-net="group" role="img" aria-label="Illustration: twelve traders compared pair by pair, with three pairs standing out"></svg>
+            <p class="viz-note">Illustration with made-up data. The numbers are example scores out of 100.</p>
+            </div>
+          </a>
+
+          <a class="case" href="projects/linked-account-detection.html" data-reveal>
+            <div>
+              <span class="role-tag">Designed the detection</span>
+              <h3>Linked-account detection</h3>
+              <p>Finds accounts that could belong to one person trading under several identities, before an account is upgraded.</p>
+              <div class="outcome"><strong>3 minutes</strong><span>average for a full account review</span></div>
+              <span class="more">Read the case study <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            </div>
+            <div class="case-viz">
+            <svg data-net="linked" role="img" aria-label="Illustration: a set of accounts where a few turn out to be connected"></svg>
+            <p class="viz-note">Illustration with made-up data.</p>
+            </div>
+          </a>
         </div>
-        <p class="note">My employer's tools and data are confidential, so the projects below are personal and course work. I'm happy to walk through the risk work in an interview.</p>
+
+        <div class="minor" data-reveal>
+          <div>
+            <h3>Weekly management reporting</h3>
+            <p>A Python and SQL pipeline that pulls the week's numbers from the firm's databases and produces a formatted Excel report.</p>
+          </div>
+          <strong>about 15 min</strong>
+        </div>
+
+        <p class="confidential" data-reveal>This is work for my employer, so the descriptions are kept general and the illustrations use made-up data. I'm happy to go into more depth in an interview.</p>
       </div>
     </section>
 
     <section id="projects" class="shell block">
-      <h2>Projects</h2>
-
-      <article class="project">
-        <div class="viewer" data-viewer>
-          <div class="stage"><img src="images/Projects/Sales_analysis/Sales_anlysis_Tableau.JPG" alt="Sales analysis dashboard built in Tableau" loading="lazy"></div>
-          <div class="tabs" role="group" aria-label="Sales analysis by tool">
-            <button type="button" aria-pressed="true" data-src="images/Projects/Sales_analysis/Sales_anlysis_Tableau.JPG" data-alt="Sales analysis dashboard built in Tableau">Tableau</button>
-            <button type="button" aria-pressed="false" data-src="images/Projects/Sales_analysis/Sales_anlysis_PowerBi.JPG" data-alt="Sales analysis dashboard built in Power BI">Power BI</button>
-            <button type="button" aria-pressed="false" data-src="images/Projects/Sales_analysis/Sales_anlysis_excel.JPG" data-alt="Sales analysis workbook in Excel">Excel</button>
-            <button type="button" aria-pressed="false" data-src="images/Projects/Sales_analysis/Sales_anlysis_Sql.JPG" data-alt="Sales analysis SQL queries">SQL</button>
-            <button type="button" aria-pressed="false" data-src="images/Projects/Sales_analysis/Sales_anlysis_Python.JPG" data-alt="Sales analysis notebook in Python">Python</button>
-            <button type="button" aria-pressed="false" data-src="images/Projects/Sales_analysis/Sales_anlysis_R.JPG" data-alt="Sales analysis report in R">R</button>
+      <h2 data-reveal>Personal projects</h2>
+      <p class="sub" data-reveal>Public work from my data analytics training, with code and dashboards you can open.</p>
+      <div class="grid3">
+        <a class="card" href="projects/sales-analysis.html" data-reveal>
+          <div class="card-img"><img src="images/Projects/Sales_analysis/Sales_anlysis_Tableau.JPG" alt="" loading="lazy"></div>
+          <div class="card-body">
+            <h3>Sales analysis, answered in six tools</h3>
+            <p>A year of sales across 12 CSV files, analysed in Excel, SQL, R, Python, Tableau and Power BI.</p>
+            <p class="made">Excel, SQL, R, Python, Tableau, Power BI</p>
+            <span class="more">Open the project <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
           </div>
-        </div>
-        <div class="project-text">
-          <h3>Sales analysis, answered in six tools</h3>
-          <p>A year of sales spread over 12 CSV files. I cleaned and combined them, then ran the same analysis in Excel, SQL, R, Python, Tableau and Power BI to compare how each tool handles the job.</p>
-          <ul>
-            <li>Found the peak sales months and the best-selling products</li>
-            <li>Mapped when and what customers buy together</li>
-            <li>Recommended ad timing, product promotion and stock levels</li>
-          </ul>
-          <a class="link" href="https://github.com/HafezTheAnalyst/Sales_analysis">View the code on GitHub</a>
-        </div>
-      </article>
-
-      <article class="project flip">
-        <div class="viewer" data-viewer>
-          <div class="stage"><img src="images/Projects/Infant_Mortality/Infant_Mortality-2.JPG" alt="Infant mortality data story in Tableau, overview page" loading="lazy"></div>
-          <div class="tabs" role="group" aria-label="Infant mortality story pages">
-            <button type="button" aria-pressed="false" data-src="images/Projects/Infant_Mortality/Infant_Mortality-1.JPG" data-alt="Infant mortality data story in Tableau, page 1">Page 1</button>
-            <button type="button" aria-pressed="true" data-src="images/Projects/Infant_Mortality/Infant_Mortality-2.JPG" data-alt="Infant mortality data story in Tableau, page 2">Page 2</button>
-            <button type="button" aria-pressed="false" data-src="images/Projects/Infant_Mortality/Infant_Mortality-3.JPG" data-alt="Infant mortality data story in Tableau, page 3">Page 3</button>
-            <button type="button" aria-pressed="false" data-src="images/Projects/Infant_Mortality/Infant_Mortality-4.JPG" data-alt="Infant mortality data story in Tableau, page 4">Page 4</button>
+        </a>
+        <a class="card" href="projects/infant-mortality.html" data-reveal style="--d:.1s">
+          <div class="card-img"><img src="images/Projects/Infant_Mortality/Infant_Mortality-2.JPG" alt="" loading="lazy"></div>
+          <div class="card-body">
+            <h3>What drives infant mortality in high-GDP countries</h3>
+            <p>A Tableau data story comparing infant mortality with health spending and birth rate, 2000 to 2012.</p>
+            <p class="made">Tableau</p>
+            <span class="more">Open the project <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
           </div>
-        </div>
-        <div class="project-text">
-          <h3>What drives infant mortality in high-GDP countries</h3>
-          <p>A Tableau data story covering the three highest-GDP countries in each region from 2000 to 2012. It compares infant mortality with birth rate, health spending per person, health spending as a share of GDP and population.</p>
-          <ul>
-            <li>Built as a guided story, so a reader follows the argument page by page</li>
-            <li>Filters set up for healthcare, public health and general readers</li>
-          </ul>
-          <a class="link" href="https://public.tableau.com/app/profile/mahmoud.hafez6387/viz/InfantMortalityDatastory/Story1">Open the story on Tableau Public</a>
-        </div>
-      </article>
-
-      <article class="project">
-        <div class="viewer" data-viewer>
-          <div class="stage"><img src="images/Projects/Sql_Yelp/SQL-1.JPG" alt="SQL query results from the Yelp dataset analysis" loading="lazy"></div>
-          <div class="tabs" role="group" aria-label="Yelp analysis screenshots">
-            <button type="button" aria-pressed="true" data-src="images/Projects/Sql_Yelp/SQL-1.JPG" data-alt="SQL query results from the Yelp dataset analysis">Results</button>
-            <button type="button" aria-pressed="false" data-src="images/Projects/Sql_Yelp/Sql.JPG" data-alt="SQL queries used in the Yelp dataset analysis">Queries</button>
+        </a>
+        <a class="card" href="projects/yelp-analysis.html" data-reveal style="--d:.2s">
+          <div class="card-img"><img src="images/Projects/Sql_Yelp/Sql.JPG" alt="" loading="lazy"></div>
+          <div class="card-body">
+            <h3>Top-rated businesses in the Yelp dataset</h3>
+            <p>SQL analysis to find the top-rated restaurants, shops and spas across several states.</p>
+            <p class="made">SQL</p>
+            <span class="more">Open the project <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
           </div>
-        </div>
-        <div class="project-text">
-          <h3>Top-rated businesses in the Yelp dataset</h3>
-          <p>A SQL project on the Yelp dataset to find the top-rated restaurants, shops, and beauty and spa businesses across several states.</p>
-          <ul>
-            <li>Joined several tables and checked the results for accuracy</li>
-            <li>Compared businesses by rating, location and whether they are still open</li>
-            <li>Verified a sample of results against the businesses' own listings</li>
-          </ul>
-          <a class="link" href="https://github.com/HafezTheAnalyst/Data-Analysis-of-Yelp-Dataset">View the code on GitHub</a>
-        </div>
-      </article>
+        </a>
+      </div>
     </section>
 
     <section id="tools" class="band">
       <div class="shell">
-        <h2>Tools I work with</h2>
-        <dl class="tools">
+        <h2 data-reveal>Tools I work with</h2>
+        <dl class="tools" data-reveal>
           <div><dt>Python</dt><dd>Pandas, NumPy, Matplotlib, Plotly, Streamlit, web scraping with BeautifulSoup</dd></div>
           <div><dt>SQL</dt><dd>PostgreSQL, ClickHouse</dd></div>
           <div><dt>BI and reporting</dt><dd>Tableau, Power BI, Excel, R and R Markdown</dd></div>
           <div><dt>Trading platforms</dt><dd>MetaTrader 5, MatchTrader</dd></div>
-          <div><dt>Risk analysis</dt><dd>Copy-trading and hedging detection, IP and device checks, trading-rule monitoring</dd></div>
-          <div><dt>Automation</dt><dd>Scheduled reports, formatted Excel exports, internal dashboards</dd></div>
+          <div><dt>Risk analysis</dt><dd>Trading-rule monitoring, copy-trading and hedging detection, linked-account checks</dd></div>
+          <div><dt>Automation</dt><dd>Automated reviews, scheduled reports, formatted Excel exports, internal dashboards</dd></div>
         </dl>
       </div>
     </section>
 
     <section id="path" class="shell block">
-      <h2>Experience and education</h2>
+      <h2 data-reveal>Experience and education</h2>
       <ol class="path">
-        <li>
+        <li data-reveal>
           <time>Nov 2023 to now</time>
           <div>
             <h3>Risk Analyst, Trading Operations</h3>
             <p class="where">City Traders Imperium, remote</p>
-            <p>Monitor trader behaviour on funded and evaluation accounts, lead the back-office and risk team, and build the Python and SQL tooling that automates detection and weekly reporting.</p>
+            <p class="what">Monitor trader behaviour on funded and evaluation accounts, lead the back-office and risk team, and build the Python and SQL tooling that automates reviews, detection and reporting.</p>
           </div>
         </li>
-        <li>
+        <li data-reveal>
           <time>2023</time>
           <div>
             <h3>Data analytics training</h3>
             <p class="where">Google, University of Michigan and UC Davis, through Coursera</p>
-            <p>Six certificates covering analytics, SQL, Python, Tableau and Power BI, with the projects shown above.</p>
+            <p class="what">Six certificates covering analytics, SQL, Python, Tableau and Power BI, with the personal projects shown above.</p>
           </div>
         </li>
-        <li>
+        <li data-reveal>
           <time>Sep 2020 to Apr 2023</time>
           <div>
             <h3>First Lieutenant</h3>
             <p class="where">Egyptian Air Defense Forces</p>
-            <p>Led teams under pressure and learned to make careful decisions with incomplete information.</p>
           </div>
         </li>
-        <li>
+        <li data-reveal>
           <time>2015 to 2019</time>
           <div>
             <h3>BSc Computer Science, Software Engineering</h3>
@@ -215,23 +267,24 @@
 
     <section id="certificates" class="band">
       <div class="shell">
-        <h2>Certificates</h2>
-        <ul class="certs">
+        <h2 data-reveal>Certificates</h2>
+        <ul class="certs" data-reveal>
           <li><a href="https://www.coursera.org/account/accomplishments/professional-cert/VELJESHBY73J"><img src="images/Courses/Google.JPG" alt="" loading="lazy"><span><strong>Google Data Analytics</strong><em>Google</em></span></a></li>
           <li><a href="https://www.coursera.org/account/accomplishments/specialization/RELT6KT34UWF"><img src="images/Courses/python-for-everybody.JPG" alt="" loading="lazy"><span><strong>Python for Everybody</strong><em>University of Michigan</em></span></a></li>
           <li><a href="https://www.coursera.org/account/accomplishments/verify/J6WAYB36UW97"><img src="images/Courses/Sql.JPG" alt="" loading="lazy"><span><strong>SQL for Data Science</strong><em>UC Davis</em></span></a></li>
-          <li><a href="https://www.coursera.org/account/accomplishments/specialization/5BC34KAMZVXZ"><img src="images/Courses/data-visualization.JPG" alt="" loading="lazy"><span><strong>Data Visualization with Tableau</strong><em>Coursera</em></span></a></li>
-          <li><a href="https://www.coursera.org/account/accomplishments/verify/36U7G5UU46U8"><img src="images/Courses/python-pandas-numpy.JPG" alt="" loading="lazy"><span><strong>Python for Data Analysis: Pandas and NumPy</strong><em>Coursera</em></span></a></li>
-          <li><a href="https://www.coursera.org/account/accomplishments/verify/3USSDWDPMYPN"><img src="images/Courses/power-bi.JPG" alt="" loading="lazy"><span><strong>Power BI Desktop</strong><em>Coursera</em></span></a></li>
+          <li><a href="https://www.coursera.org/account/accomplishments/specialization/5BC34KAMZVXZ"><img src="images/Courses/data-visualization.JPG" alt="" loading="lazy"><span><strong>Data Visualization with Tableau</strong><em>UC Davis</em></span></a></li>
+          <li><a href="https://www.coursera.org/account/accomplishments/verify/36U7G5UU46U8"><img src="images/Courses/python-pandas-numpy.JPG" alt="" loading="lazy"><span><strong>Python for Data Analysis: Pandas and NumPy</strong><em>Coursera Project Network</em></span></a></li>
+          <li><a href="https://www.coursera.org/account/accomplishments/verify/3USSDWDPMYPN"><img src="images/Courses/power-bi.JPG" alt="" loading="lazy"><span><strong>Getting Started with Power BI Desktop</strong><em>Coursera Project Network</em></span></a></li>
         </ul>
       </div>
     </section>
 
     <section id="contact" class="shell contact">
-      <div>
-        <h2>Hiring for a data or risk role?</h2>
-        <p>I'm open to remote and Cairo-based roles in data analysis, risk analysis and trading operations. Email is the fastest way to reach me.</p>
-        <a class="mail" href="mailto:mahmoud.hafez.mh.2023@gmail.com">mahmoud.hafez.mh.2023@gmail.com</a>
+      <h2 data-reveal>Get in touch</h2>
+      <p data-reveal>For data analysis, risk analysis or trading operations work, email is the fastest way to reach me.</p>
+      <a class="mail" href="mailto:mahmoud.hafez.mh.2023@gmail.com" data-reveal>mahmoud.hafez.mh.2023@gmail.com</a>
+      <div class="actions" data-reveal>
+        <a class="btn btn-solid" href="assets/Mahmoud_Hafez_CV.pdf" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M6 11l6 6 6-6M5 20h14"/></svg>Download CV</a>
         <ul class="elsewhere">
           <li><a href="https://www.linkedin.com/in/hafeztheanalyst/">LinkedIn</a></li>
           <li><a href="https://github.com/HafezTheAnalyst">GitHub</a></li>
