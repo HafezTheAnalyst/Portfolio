@@ -42,18 +42,32 @@
     update();
   }
 
-  /* ---------- Count-up numbers ---------- */
-  function countUp(node) {
-    var target = parseFloat(node.dataset.count);
-    var decimals = (node.dataset.count.split('.')[1] || '').length;
-    if (reduce) { node.textContent = target.toFixed(decimals); return; }
-    var start = performance.now(), ms = 1200;
-    (function tick(now) {
-      var t = clamp((now - start) / ms, 0, 1);
-      node.textContent = (target * (1 - Math.pow(1 - t, 3))).toFixed(decimals);
-      if (t < 1) requestAnimationFrame(tick);
-    })(start);
+  /* ---------- Rolling numbers: each digit rolls up to its value ---------- */
+  var ROLL_H = 1;
+  function setupRoll(node) {
+    var text = node.textContent, n = 0;
+    var html = '<span class="sr">' + text + '</span>';
+    text.split(/(\d)/).forEach(function (part) {
+      if (part === '') return;
+      if (/\d/.test(part)) {
+        html += '<span class="rollpart" aria-hidden="true"><span data-d="' + part + '" style="--rd:' + (n++ * 0.12).toFixed(2) + 's"><i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i></span></span>';
+      } else {
+        html += '<span class="rollpart" aria-hidden="true">' + part + '</span>';
+      }
+    });
+    node.innerHTML = html;
+    node.setAttribute('data-roll', '');
+    node.rollText = text;
+    if (reduce) playRoll(node);
   }
+  function playRoll(node) {
+    node.querySelectorAll('[data-d]').forEach(function (reel) {
+      reel.style.transform = 'translateY(-' + (parseInt(reel.dataset.d, 10) * ROLL_H).toFixed(2) + 'em)';
+    });
+    // Once the digits have settled, go back to plain text so the spacing is natural.
+    setTimeout(function () { node.textContent = node.rollText; }, reduce ? 0 : 2200);
+  }
+  document.querySelectorAll('.results [data-count], .outcome strong, .bigresult, .minor strong').forEach(setupRoll);
 
   /* ---------- Network illustration (made-up data) ---------- */
   function seeded(seed) {
@@ -141,14 +155,113 @@
     return play;
   }
 
+  /* ---------- Rotating network: traders as points on a slowly turning globe (made-up data) ---------- */
+  function makeGlobe(canvas) {
+    var ctx = canvas.getContext('2d');
+    var COUNT = 16, pts = [], i;
+    for (i = 0; i < COUNT; i++) {
+      var yy = 1 - 2 * (i + 0.5) / COUNT, rr = Math.sqrt(1 - yy * yy), ang = i * 2.399963;
+      pts.push([Math.cos(ang) * rr, yy, Math.sin(ang) * rr]);
+    }
+    var hot = [[1, 6, 91], [3, 11, 84], [8, 14, 77]];
+    var rotY = 0.5, rotX = -0.28, dragging = false, lastX = 0, lastY = 0;
+    var started = null, visible = false, w = 0, h = 0, raf = null;
+
+    function resize() {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = canvas.clientWidth; h = canvas.clientHeight;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function project(p) {
+      var cy = Math.cos(rotY), sy = Math.sin(rotY), cx = Math.cos(rotX), sx = Math.sin(rotX);
+      var x = p[0] * cy + p[2] * sy, z = -p[0] * sy + p[2] * cy;
+      var y = p[1] * cx - z * sx; z = p[1] * sx + z * cx;
+      var s = 1 / (1 + z * 0.28), R = Math.min(w, h) * 0.4;
+      return { x: w / 2 + x * R * s, y: h / 2 + y * R * s, z: z, s: s };
+    }
+    function draw(now) {
+      raf = null;
+      if (started === null) started = now;
+      var t = reduce ? 99 : (now - started) / 1000;
+      var cs = getComputedStyle(canvas);
+      var cNode = cs.getPropertyValue('--blue').trim(), cAmber = cs.getPropertyValue('--amber').trim();
+      var cDot = cs.getPropertyValue('--dot').trim(), cInk = cs.getPropertyValue('--amber-ink').trim(), cBg = cs.getPropertyValue('--paper').trim();
+      var P = pts.map(project), a, b;
+      ctx.clearRect(0, 0, w, h);
+
+      // Every pair is compared: faint lines, fainter at the back.
+      var fade = clamp((t - 0.4) / 0.8, 0, 1);
+      ctx.lineWidth = 1; ctx.strokeStyle = cDot;
+      for (a = 0; a < COUNT; a++) for (b = a + 1; b < COUNT; b++) {
+        ctx.globalAlpha = fade * clamp(0.3 - (P[a].z + P[b].z) * 0.11, 0.04, 0.5);
+        ctx.beginPath(); ctx.moveTo(P[a].x, P[a].y); ctx.lineTo(P[b].x, P[b].y); ctx.stroke();
+      }
+      // The pairs that stand out.
+      var flagged = {};
+      hot.forEach(function (hp, k) {
+        var prog = clamp((t - 1.2 - k * 0.45) / 0.7, 0, 1);
+        if (prog <= 0) return;
+        var p = P[hp[0]], q = P[hp[1]];
+        ctx.globalAlpha = 1; ctx.strokeStyle = cAmber; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + (q.x - p.x) * prog, p.y + (q.y - p.y) * prog); ctx.stroke();
+        if (prog >= 1) { flagged[hp[0]] = flagged[hp[1]] = true; hp.done = true; }
+      });
+      // Points, back to front.
+      P.map(function (p, idx) { return { p: p, idx: idx }; }).sort(function (m, n) { return n.p.z - m.p.z; }).forEach(function (o) {
+        var grow = clamp((t - o.idx * 0.04) / 0.4, 0, 1);
+        ctx.globalAlpha = clamp(0.95 - o.p.z * 0.4, 0.35, 1);
+        ctx.fillStyle = flagged[o.idx] ? cAmber : cNode;
+        ctx.beginPath(); ctx.arc(o.p.x, o.p.y, (flagged[o.idx] ? 7.5 : 6) * o.p.s * grow, 0, Math.PI * 2); ctx.fill();
+      });
+      // Scores on the flagged pairs.
+      ctx.globalAlpha = 1; ctx.font = '700 12px Inter, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      hot.forEach(function (hp) {
+        if (!hp.done) return;
+        var mx = (P[hp[0]].x + P[hp[1]].x) / 2, my = (P[hp[0]].y + P[hp[1]].y) / 2;
+        ctx.lineWidth = 4; ctx.strokeStyle = cBg; ctx.strokeText(hp[2], mx, my);
+        ctx.fillStyle = cInk; ctx.fillText(hp[2], mx, my);
+      });
+
+      if (!dragging && !reduce) rotY += 0.0032;
+      if (visible && (!reduce || dragging)) schedule();
+    }
+    function schedule() { if (raf === null) raf = requestAnimationFrame(draw); }
+
+    canvas.addEventListener('pointerdown', function (e) {
+      dragging = true; lastX = e.clientX; lastY = e.clientY;
+      canvas.setPointerCapture(e.pointerId); schedule();
+    });
+    canvas.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      rotY += (e.clientX - lastX) * 0.008;
+      rotX = clamp(rotX + (e.clientY - lastY) * 0.008, -1.2, 1.2);
+      lastX = e.clientX; lastY = e.clientY;
+    });
+    var release = function () { dragging = false; };
+    canvas.addEventListener('pointerup', release);
+    canvas.addEventListener('pointercancel', release);
+    window.addEventListener('resize', function () { resize(); schedule(); });
+    document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#theme')) schedule(); });
+
+    resize();
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        visible = entries[0].isIntersecting;
+        if (visible) { resize(); schedule(); }
+      }, { threshold: 0.15 }).observe(canvas);
+    } else { visible = true; schedule(); }
+  }
+  document.querySelectorAll('canvas[data-globe]').forEach(makeGlobe);
+
   /* ---------- Reveal on scroll, and start charts when they come into view ---------- */
   var plays = new Map();
   document.querySelectorAll('svg[data-net]').forEach(function (svg) { plays.set(svg, drawNetwork(svg)); });
 
-  var watched = document.querySelectorAll('[data-reveal], [data-viz], [data-count], svg[data-net]');
+  var watched = document.querySelectorAll('[data-reveal], [data-viz], [data-roll], svg[data-net]');
   function activate(node) {
     node.classList.add('in');
-    if (node.hasAttribute('data-count')) countUp(node);
+    if (node.hasAttribute('data-roll') && !reduce) setTimeout(function () { playRoll(node); }, 350);
     if (plays.has(node)) plays.get(node)();
   }
   if ('IntersectionObserver' in window) {
@@ -271,14 +384,35 @@
     });
   }
 
-  /* ---------- Headline: words arrive one after another ---------- */
+  /* ---------- Headline: words arrive one after another; the last word starts covered ---------- */
   var headline = document.getElementById('headline');
   if (headline && !reduce) {
     var label = headline.textContent;
+    var words = label.split(' ');
     headline.setAttribute('aria-label', label);
-    headline.innerHTML = label.split(' ').map(function (w, i) {
-      return '<span class="w" aria-hidden="true" style="animation-delay:' + (0.15 + i * 0.07).toFixed(2) + 's">' + w + '</span>';
+    headline.innerHTML = words.map(function (w, i) {
+      var cls = i === words.length - 1 ? 'w redact' : 'w';
+      return '<span class="' + cls + '" aria-hidden="true" style="animation-delay:' + (0.15 + i * 0.07).toFixed(2) + 's">' + w + '</span>';
     }).join(' ');
+  }
+
+  /* ---------- Role line: flips from one role to the next ---------- */
+  var roles = document.getElementById('roles');
+  if (roles && !reduce) {
+    var roleList = ['Data analyst', 'Risk analyst', 'Trading operations'], roleAt = 0;
+    var word = roles.querySelector('.roles-word');
+    setInterval(function () {
+      if (document.hidden) return;
+      word.classList.add('out');
+      setTimeout(function () {
+        roleAt = (roleAt + 1) % roleList.length;
+        word.textContent = roleList[roleAt];
+        word.classList.remove('out');
+        word.classList.add('pre');
+        word.getBoundingClientRect();
+        word.classList.remove('pre');
+      }, 480);
+    }, 2600);
   }
 
   /* ---------- Risk desk: a simulated price chart with trades, flags and live counters ---------- */
@@ -307,7 +441,7 @@
     if (Math.random() < 0.3) {
       k.trade = { buy: Math.random() < 0.5, flag: Math.random() < 0.3 };
       stats.trades += 1 + Math.floor(Math.random() * 6);
-      if (k.trade.flag) { stats.flags++; stats.rules[Math.floor(Math.random() * 3)]++; }
+      if (k.trade.flag) { k.trade.rule = Math.floor(Math.random() * 3); stats.flags++; stats.rules[k.trade.rule]++; }
     }
     return k;
   }
@@ -371,14 +505,41 @@
   render(true);
   setTimeout(showStats, reduce ? 0 : 1500);
 
+  // A small label floats above the desk each time a new flag is raised.
+  var toast = document.getElementById('flagtoast'), toastTimer = null;
+  var RULES = ['Risk per trade', 'Hedging', 'Copy trading'];
+  function announce(rule) {
+    if (!toast) return;
+    toast.textContent = 'Flagged: ' + RULES[rule];
+    toast.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('on'); }, 1900);
+  }
+
+  // The desk leans a few degrees toward the pointer.
+  var desk = svg.closest('.desk'), stage = svg.closest('.screen') || document.body;
+  if (desk && !reduce && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    stage.addEventListener('mousemove', function (e) {
+      var r = stage.getBoundingClientRect();
+      desk.style.setProperty('--ry', (((e.clientX - r.left) / r.width - 0.5) * 9).toFixed(2) + 'deg');
+      desk.style.setProperty('--rx', (((e.clientY - r.top) / r.height - 0.5) * -7).toFixed(2) + 'deg');
+    });
+    stage.addEventListener('mouseleave', function () {
+      desk.style.setProperty('--ry', '0deg');
+      desk.style.setProperty('--rx', '0deg');
+    });
+  }
+
   var visible = true;
   if ('IntersectionObserver' in window) {
     new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; }).observe(svg);
   }
   function tick() {
     if (visible && !document.hidden) {
-      candles.push(nextCandle());
+      var fresh = nextCandle();
+      candles.push(fresh);
       candles.shift();
+      if (fresh.trade && fresh.trade.flag) announce(fresh.trade.rule);
       // Put the row one step to the right without animation, then let it roll back into place.
       gRoll.style.transition = 'none';
       render(false);

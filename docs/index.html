@@ -59,6 +59,7 @@
             <span><strong>Mahmoud Hafez</strong>Data and risk analyst, Cairo</span>
           </p>
           <h1 id="headline">I find what the data is saying, and what it is hiding.</h1>
+          <p class="roles" id="roles" aria-label="Data analyst, risk analyst, trading operations"><span class="roles-word" aria-hidden="true">Data analyst</span></p>
           <p class="lede">For the past three years I've worked in risk and trading operations at a proprietary trading firm, where I analyse trader behaviour, automate reviews and reporting, and build detection tools in Python and SQL.</p>
           <div class="actions">
             <a class="btn btn-solid" href="#work">See my work</a>
@@ -74,6 +75,7 @@
           <div class="desk-chart">
             <svg id="candles" viewBox="0 0 560 270" role="img" aria-label="Simulated price chart with trades marked and a few of them flagged"></svg>
             <div class="ohlc" id="ohlc" aria-hidden="true"></div>
+            <div class="flagtoast" id="flagtoast" aria-hidden="true"></div>
           </div>
           <dl class="desk-kpis">
             <div><dt>Trades checked</dt><dd id="k-trades">0</dd></div>
@@ -164,8 +166,8 @@
             </div>
           </div>
           <div class="case-viz" data-reveal style="--d:.15s">
-            <svg data-net="group" role="img" aria-label="Illustration: twelve traders compared pair by pair, with three pairs standing out"></svg>
-            <p class="viz-note">Illustration with made-up data. The numbers are example scores out of 100.</p>
+            <canvas data-globe role="img" aria-label="Illustration: a rotating network of traders compared pair by pair, with three pairs standing out"></canvas>
+            <p class="viz-note">Illustration with made-up data. Drag to turn it. The numbers are example scores out of 100.</p>
           </div>
         </div>
       </div>

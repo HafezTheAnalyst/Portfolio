@@ -108,8 +108,16 @@ h3 { font-size: 1.25rem; font-weight: 700; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
 
 /* Risk desk: simulated price chart with trades, flags and live counters */
-.desk { background: var(--surface); border: 1px solid var(--rule); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
-.desk-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--rule); }
+.desk { background: var(--surface); border: 1px solid var(--rule); border-radius: 18px; box-shadow: var(--shadow); transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transform-style: preserve-3d; transition: transform 0.3s ease-out; will-change: transform; }
+.js .desk { animation: swing 1.3s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s backwards; }
+@keyframes swing { from { opacity: 0; transform: perspective(1100px) rotateY(-22deg) rotateX(8deg) translateY(36px); } }
+/* The parts of the desk sit at different depths, so they shift against each other as it tilts. */
+.desk-head { transform: translateZ(18px); }
+.desk-kpis { transform: translateZ(30px); }
+.rules { transform: translateZ(14px); }
+.flagtoast { position: absolute; top: 34px; right: 64px; z-index: 3; transform: translateZ(64px) translateY(8px); opacity: 0; pointer-events: none; font-size: 0.8rem; font-weight: 700; color: #14213d; background: var(--amber); padding: 6px 12px; border-radius: 999px; box-shadow: 0 10px 22px -8px rgba(0, 0, 0, 0.45); transition: opacity 0.3s, transform 0.4s cubic-bezier(0.2, 1.4, 0.4, 1); white-space: nowrap; }
+.flagtoast.on { opacity: 1; transform: translateZ(64px) translateY(0); }
+.desk-head { border-radius: 17px 17px 0 0; display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--rule); }
 .desk-title { font-weight: 700; letter-spacing: -0.01em; }
 .desk-title em { font-style: normal; font-weight: 500; color: var(--muted); font-size: 0.85rem; margin-left: 8px; }
 .live { display: inline-flex; align-items: center; gap: 7px; font-size: 0.82rem; font-weight: 650; color: var(--muted); }
@@ -145,8 +153,33 @@ h3 { font-size: 1.25rem; font-weight: 700; }
 .rule .track { height: 10px; border-radius: 5px; background: var(--tint); overflow: hidden; }
 .rule .fill { display: block; height: 100%; width: 100%; border-radius: 5px; background: var(--amber); transform-origin: 0 50%; transform: scaleX(0); transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1); }
 
-.hero h1 { font-size: clamp(2.4rem, 4.6vw, 3.7rem); }
+.hero h1 { font-size: clamp(2.3rem, 4.3vw, 3.4rem); }
+.hero .who { margin-bottom: 18px; }
+.hero .lede { margin-top: 14px; }
+.hero .actions { margin-top: 24px; }
 .js #headline .w { display: inline-block; opacity: 0; transform: translateY(0.5em); animation: word 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
+/* The last word of the headline starts covered, then the cover slides away. */
+.js #headline .redact { position: relative; }
+.js #headline .redact::after { content: ""; position: absolute; left: -0.05em; right: -0.05em; top: 0.12em; bottom: 0.04em; border-radius: 5px; background: var(--ink); transform-origin: 100% 50%; animation: unredact 0.8s cubic-bezier(0.7, 0, 0.2, 1) 2s forwards; }
+@keyframes unredact { to { transform: scaleX(0); } }
+
+/* Role line under the headline: one phrase flips over to the next */
+.roles { display: flex; align-items: center; gap: 11px; margin: 14px 0 0; height: 1.4em; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; perspective: 500px; }
+.roles::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--amber); flex: none; }
+.roles-word { display: inline-block; transform-origin: 50% 50% -0.7em; backface-visibility: hidden; transition: transform 0.6s cubic-bezier(0.3, 0.7, 0.2, 1), opacity 0.45s; }
+.roles-word.out { transform: rotateX(88deg); opacity: 0; }
+.roles-word.pre { transform: rotateX(-88deg); opacity: 0; transition: none; }
+
+/* Rolling numbers */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.rollpart { display: inline-block; height: 1em; line-height: 1; overflow: hidden; vertical-align: bottom; white-space: pre; color: inherit; }
+.outcome strong span, .results strong span { color: inherit; }
+.rollpart > span { display: block; transition: transform 1.4s cubic-bezier(0.2, 0.7, 0.2, 1); transition-delay: var(--rd, 0s); }
+.rollpart i { display: block; height: 1em; font-style: normal; }
+
+/* Rotating network */
+canvas[data-globe] { display: block; width: 100%; aspect-ratio: 10 / 7; cursor: grab; touch-action: pan-y; }
+canvas[data-globe]:active { cursor: grabbing; }
 @keyframes word { to { opacity: 1; transform: none; } }
 
 /* Headline results */
@@ -364,7 +397,9 @@ html.snap { scroll-snap-type: y mandatory; scroll-padding-top: 62px; }
 .snap .confidential { margin-top: 14px; }
 .snap .card-img { aspect-ratio: 16 / 9; }
 .snap .screen { padding: 20px 0; overflow: hidden; }
-.snap .screen > .shell { opacity: 0; transform: translateY(30px); transition: opacity 0.55s ease, transform 0.75s cubic-bezier(0.2, 0.7, 0.2, 1); }
+/* Depth between sections: the one you leave drops back, the one you reach comes forward. */
+.snap .screen { perspective: 1400px; }
+.snap .screen > .shell { opacity: 0; transform: translateY(46px) translateZ(-160px) rotateX(7deg); transform-origin: 50% 0; transition: opacity 0.5s ease, transform 0.85s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .snap .screen.active > .shell { opacity: 1; transform: none; }
 
 /* Reveal on scroll */
@@ -412,5 +447,8 @@ html.snap { scroll-snap-type: y mandatory; scroll-padding-top: 62px; }
   *, *::before, *::after { transition-duration: 0.01ms !important; transition-delay: 0s !important; }
   .js [data-reveal] { opacity: 1; transform: none; }
   .js #headline .w { opacity: 1; transform: none; animation: none; }
+  .js .desk { animation: none; }
+  .desk { transform: none; }
+  .snap .screen > .shell { transform: none; }
   #candles .c, #candles .ring, .live i { animation: none; }
 }
