@@ -43,8 +43,6 @@ The headline results on the home page are in the `results` section and in each c
 
 ## Notes
 
-- The previous design (blue and amber, version 1) is kept on the `backup-v1-blue-amber` branch. To go back to it, make `main` point at that branch again.
-
 - On large screens the home page is split into full-screen sections (each `<section class="screen">` in `index.html`) and one scroll step moves one section. Keep each section short enough to fit one screen. Phones and small windows scroll normally.
 
 - The case studies describe work for an employer in general terms only. Keep internal tool names, data, screenshots and detection details out of this repository.
