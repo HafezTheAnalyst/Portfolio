@@ -62,7 +62,8 @@
           <section><h2>Problem</h2>
             <p>Every account has to be reviewed against the firm's trading rules before it moves forward. By hand this took about 20 minutes per account and covered only the basic checks, so violations were sometimes missed.</p></section>
           <section><h2>What I built</h2>
-            <p>A tool that analyses an account's full trade history and checks it against each rule automatically: risk per trade, risk per trade idea, hedging, copy trading and the firm's other trading rules.</p>
+            <p>A tool that analyses an account's full trade history and checks it against each rule automatically. It covers the rules prop firms care about most: risk per trade and per trade idea, martingale, hedging, copy trading, one-sided trading and margin usage, along with the firm's other trading rules.</p>
+            <p>For each rule it shows the trades that broke it and the profit made on them. It also builds a performance scorecard for the account: net profit, best and worst trade, largest floating drawdown, longest winning and losing runs, and highest risk exposure.</p>
             <p>When the firm adds a new rule, I add it as a new automated check.</p></section>
           <section><h2>Result</h2>
             <strong class="bigresult">90% faster</strong>
@@ -75,7 +76,7 @@
               <div class="bar after"><span class="bar-label">Automated review</span><span class="bar-val">about 2 min</span><span class="bar-track"><span class="bar-fill" style="--w:10%"></span></span></div>
             </div>
             <ul class="chips" aria-label="Rules checked">
-              <li>Risk per trade</li><li>Risk per trade idea</li><li>Hedging</li><li>Copy trading</li><li>Other firm rules</li>
+              <li>Risk per trade and per idea</li><li>Martingale</li><li>Hedging</li><li>Copy trading</li><li>One-sided trading</li><li>Margin usage</li><li>Other firm rules</li>
             </ul></div>
         </div>
       </div>
