@@ -71,9 +71,20 @@
           <p class="confidential">This is work for my employer, so the details here are kept general. I'm happy to go into more depth in an interview.</p>
         </div>
         <div class="story-viz" data-reveal style="--d:.15s">
-          <div class="case-viz"><canvas data-scene="gates" role="img" aria-label="Illustration: trades passing through a row of rule checks, with a few stopped and flagged"></canvas>
-            <p class="compare"><span>Manual review <b>about 20 min</b></span><i aria-hidden="true"></i><span>Automated <b>about 2 min</b></span></p>
-            <p class="viz-note">Illustration with made-up data. Drag to turn it. The firm's other rules are checked the same way.</p></div>
+          <div class="case-viz"><div class="race" data-race role="img" aria-label="Animation: the manual review works through six rules slowly, takes about 20 minutes and misses a margin violation. The automated review checks all six in about 2 minutes and flags it.">
+              <div class="lane manual">
+                <div class="lane-head"><span class="lane-name">Manual review</span><span class="clock">00:00</span></div>
+                <ul class="checks"><li><i></i><span>Risk per trade</span></li><li><i></i><span>Martingale</span></li><li><i></i><span>Hedging</span></li><li><i></i><span>Copy trading</span></li><li><i></i><span>One-sided trading</span></li><li><i></i><span>Margin</span></li></ul>
+                <span class="lane-bar"><i></i></span>
+              </div>
+              <div class="lane auto">
+                <div class="lane-head"><span class="lane-name">Automated review</span><span class="clock">00:00</span></div>
+                <ul class="checks"><li><i></i><span>Risk per trade</span></li><li><i></i><span>Martingale</span></li><li><i></i><span>Hedging</span></li><li><i></i><span>Copy trading</span></li><li><i></i><span>One-sided trading</span></li><li><i></i><span>Margin</span></li></ul>
+                <span class="lane-bar"><i></i></span>
+              </div>
+              <p class="race-result"><strong>90% faster,</strong> and nothing missed</p>
+            </div>
+            <p class="viz-note">Illustration with made-up data and sped-up clocks. The firm's other rules are checked the same way.</p></div>
         </div>
       </div>
     </section>

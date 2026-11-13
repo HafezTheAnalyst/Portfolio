@@ -255,82 +255,74 @@
     };
   }
 
-  /* Trading-rule review: trades flow through a row of rule gates.
-     Most pass; now and then one is stopped at a gate and flagged. */
-  function gatesScene() {
-    var RULES = ['Risk per trade', 'Martingale', 'Hedging', 'Copy trading', 'One-sided', 'Margin'];
-    var GX = RULES.map(function (r, i) { return -1.05 + i * 0.42; });
-    var START = -1.5, END = 1.5, SPEED = 0.62, EVERY = 0.42, G = 0.4;
-    function stopGate(i) { return i % 5 === 2 ? (Math.floor(i / 5) * 5 + 1) % RULES.length : -1; }
-    return {
-      rotY: -0.36, rotX: -0.2, minX: -0.9, maxX: 0.15, scale: 0.385, aspect: 1.5, sway: 0.1, still: 9.8, centerY: 0.44, centerX: 0.54,
-      draw: function (ctx, st, t, c) {
-        var items = [], flash = {};
-        // Trades: position depends only on time, so the scene needs no stored state.
-        var first = Math.floor((t - 8) / EVERY), last = Math.floor(t / EVERY);
-        for (var i = Math.max(0, first); i <= last; i++) {
-          var age = t - i * EVERY, g = stopGate(i), x = START + age * SPEED, y = 0, alpha = 1, flagged = false;
-          if (g >= 0) {
-            var tStop = (GX[g] - 0.05 - START) / SPEED;
-            if (age >= tStop) {
-              var since = age - tStop;
-              x = GX[g] - 0.05; flagged = true;
-              y = -0.66 * clamp(since / 0.45, 0, 1);
-              alpha = 1 - clamp((since - 1.7) / 0.5, 0, 1);
-              if (since < 1.7) flash[g] = 1 - clamp((since - 1.1) / 0.6, 0, 1);
-            }
-          }
-          if (!flagged) alpha = clamp((x - START) / 0.2, 0, 1) * (1 - clamp((x - (END - 0.25)) / 0.25, 0, 1));
-          if (x > END || alpha <= 0) continue;
-          items.push({ kind: 'trade', p: st.project([x, y, 0]), flagged: flagged, alpha: alpha });
-        }
-        GX.forEach(function (gx, k) {
-          items.push({ kind: 'gate', k: k, p: st.project([gx, 0, 0]), q: [[gx, -G, -G], [gx, -G, G], [gx, G, G], [gx, G, -G]].map(st.project) });
-        });
-        // The path the trades follow.
-        ctx.globalAlpha = 0.6; ctx.strokeStyle = c.rule; ctx.lineWidth = 1.2; ctx.setLineDash([4, 5]);
-        line(ctx, st.project([START, 0, 0]), st.project([END, 0, 0]));
-        ctx.setLineDash([]);
-
-        var appear = function (k) { return clamp((t - k * 0.12) / 0.5, 0, 1); };
-        items.sort(function (m, n) { return n.p.z - m.p.z; }).forEach(function (it) {
-          if (it.kind === 'gate') {
-            var f = flash[it.k] || 0, a = appear(it.k);
-            ctx.beginPath(); ctx.moveTo(it.q[0].x, it.q[0].y);
-            for (var k = 1; k < 4; k++) ctx.lineTo(it.q[k].x, it.q[k].y);
-            ctx.closePath();
-            ctx.globalAlpha = 0.5 * a; ctx.fillStyle = f > 0 ? c.amber : c.tint;
-            if (f > 0) ctx.globalAlpha = (0.12 + 0.2 * f) * a;
-            ctx.fill();
-            ctx.globalAlpha = a; ctx.strokeStyle = f > 0.05 ? c.amber : c.muted; ctx.lineWidth = f > 0.05 ? 2.4 : 1.4; ctx.lineJoin = 'round';
-            ctx.stroke();
-          } else {
-            var r = (it.flagged ? 7 : 5.5) * it.p.s;
-            ctx.globalAlpha = it.alpha; ctx.fillStyle = it.flagged ? c.amber : c.node;
-            ctx.beginPath();
-            if (ctx.roundRect) ctx.roundRect(it.p.x - r, it.p.y - r, r * 2, r * 2, 2.5); else ctx.rect(it.p.x - r, it.p.y - r, r * 2, r * 2);
-            ctx.fill();
-          }
-        });
-        // Rule names under the gates, on two rows so they never collide.
-        ctx.font = '600 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-        GX.forEach(function (gx, k) {
-          var foot = st.project([gx, G, 0]), f = flash[k] || 0;
-          var ly = foot.y + 9 + (k % 2 ? 16 : 0);
-          ctx.globalAlpha = appear(k) * 0.7; ctx.strokeStyle = c.rule; ctx.lineWidth = 1;
-          line(ctx, { x: foot.x, y: foot.y + 3 }, { x: foot.x, y: ly - 2 });
-          ctx.globalAlpha = appear(k);
-          ctx.lineWidth = 4; ctx.strokeStyle = c.bg; ctx.strokeText(RULES[k], foot.x, ly);
-          ctx.fillStyle = f > 0.05 ? c.amberInk : c.muted; ctx.fillText(RULES[k], foot.x, ly);
-        });
-      }
-    };
-  }
-
-  var SCENES = { globe: globeScene, layers: layersScene, gates: gatesScene };
+  var SCENES = { globe: globeScene, layers: layersScene };
   document.querySelectorAll('canvas[data-scene]').forEach(function (canvas) {
     var build = SCENES[canvas.dataset.scene];
     if (build) make3d(canvas, build());
+  });
+
+  /* ---------- The race: manual review against automated review of the same account ---------- */
+  document.querySelectorAll('[data-race]').forEach(function (root) {
+    var manual = root.querySelector('.lane.manual'), auto = root.querySelector('.lane.auto');
+    var result = root.querySelector('.race-result');
+    var MARGIN = 5, timers = [], run = 0, visible = false, playing = false;
+    function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
+    function fmt(sec) { var m = Math.floor(sec / 60), s = Math.floor(sec % 60); return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
+    function items(lane) { return lane.querySelectorAll('.checks li'); }
+    function setLane(lane, seconds, part) {
+      lane.querySelector('.clock').textContent = fmt(seconds);
+      lane.querySelector('.lane-bar i').style.transform = 'scaleX(' + part + ')';
+    }
+    function reset() {
+      timers.forEach(clearTimeout); timers = []; run++;
+      [manual, auto].forEach(function (lane) {
+        lane.classList.remove('done');
+        items(lane).forEach(function (li) { li.className = ''; });
+        setLane(lane, 0, 0);
+      });
+      result.classList.remove('show');
+    }
+    // Run one lane: each rule is checked in turn while the clock counts up to `seconds`.
+    function runLane(lane, seconds, ms, marginState) {
+      var mine = run, start = performance.now(), list = items(lane), step = ms / list.length;
+      list.forEach(function (li, i) {
+        at(i * step, function () { li.className = 'checking'; });
+        at((i + 1) * step, function () { li.className = i === MARGIN ? marginState : 'ok'; });
+      });
+      (function tick(now) {
+        if (mine !== run) return;
+        var part = clamp((now - start) / ms, 0, 1);
+        setLane(lane, seconds * part, part);
+        if (part < 1) requestAnimationFrame(tick); else lane.classList.add('done');
+      })(start);
+    }
+    function showEnd() {
+      items(manual)[MARGIN].className = 'missed';
+      result.classList.add('show');
+    }
+    function play() {
+      playing = true;
+      reset();
+      at(500, function () {
+        runLane(auto, 120, 600, 'flag');      // about 2 minutes
+        runLane(manual, 1200, 6000, 'ok');    // about 20 minutes, and the margin breach goes through
+      });
+      at(7100, showEnd);
+      at(11500, function () { playing = false; if (visible) play(); });
+    }
+    function still() {
+      [[manual, 1200, 'missed'], [auto, 120, 'flag']].forEach(function (cfg) {
+        items(cfg[0]).forEach(function (li, i) { li.className = i === MARGIN ? cfg[2] : 'ok'; });
+        setLane(cfg[0], cfg[1], 1);
+        cfg[0].classList.add('done');
+      });
+      result.classList.add('show');
+    }
+    if (reduce || !('IntersectionObserver' in window)) { still(); return; }
+    new IntersectionObserver(function (entries) {
+      visible = entries[0].isIntersecting;
+      if (visible && !playing) play();
+    }, { threshold: 0.35 }).observe(root);
   });
 
   /* ---------- Reveal on scroll, and start charts when they come into view ---------- */
