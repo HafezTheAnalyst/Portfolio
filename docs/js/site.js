@@ -69,161 +69,51 @@
   }
   document.querySelectorAll('.results [data-count], .outcome strong, .bigresult, .minor strong').forEach(setupRoll);
 
-  /* ---------- Network illustration (made-up data) ---------- */
+  /* ---------- 3D illustrations on canvas (all made-up data) ----------
+     make3d() handles sizing, turning, dragging and colours; each scene only draws. */
   function seeded(seed) {
     return function () {
       seed = (seed * 1664525 + 1013904223) % 4294967296;
       return seed / 4294967296;
     };
   }
-  function drawNetwork(svg) {
-    var mode = svg.dataset.net;
-    var W = 400, H = 280;
-    var rand = seeded(mode === 'group' ? 11 : 29);
-    var nodes = [], hot = [], i, j;
-    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-    svg.classList.add('net');
 
-    if (mode === 'group') {
-      // Traders on a ring; every pair is compared, a few pairs stand out.
-      var n = 12;
-      for (i = 0; i < n; i++) {
-        var a = (i / n) * Math.PI * 2 - Math.PI / 2;
-        nodes.push({ x: W / 2 + Math.cos(a) * 150, y: H / 2 + Math.sin(a) * 108 });
-      }
-      hot = [[0, 3, 91], [5, 8, 84], [9, 11, 77]];
-    } else {
-      // Accounts scattered; a few clusters turn out to be connected.
-      var cols = 6, rows = 3;
-      for (i = 0; i < cols * rows; i++) {
-        nodes.push({
-          x: 42 + (i % cols) * 63 + (rand() - 0.5) * 30,
-          y: 52 + Math.floor(i / cols) * 86 + (rand() - 0.5) * 38
-        });
-      }
-      hot = [[1, 7], [7, 8], [1, 8], [4, 10], [12, 13], [13, 14]];
-    }
-
-    var gEdges = el('g', {}), gHot = el('g', {}), gNodes = el('g', {}), gText = el('g', {});
-    svg.appendChild(gEdges); svg.appendChild(gHot); svg.appendChild(gNodes); svg.appendChild(gText);
-
-    var edges = [];
-    if (mode === 'group') {
-      for (i = 0; i < nodes.length; i++) for (j = i + 1; j < nodes.length; j++) {
-        var e = el('line', { 'class': 'edge', x1: nodes[i].x, y1: nodes[i].y, x2: nodes[j].x, y2: nodes[j].y });
-        gEdges.appendChild(e); edges.push(e);
-      }
-    }
-    var flagged = {};
-    var hotEls = hot.map(function (h) {
-      var p = nodes[h[0]], q = nodes[h[1]];
-      var len = Math.hypot(q.x - p.x, q.y - p.y);
-      var line = el('line', { 'class': 'hot', x1: p.x, y1: p.y, x2: q.x, y2: q.y });
-      line.style.strokeDasharray = len;
-      line.style.strokeDashoffset = len;
-      gHot.appendChild(line);
-      flagged[h[0]] = flagged[h[1]] = true;
-      var label = null;
-      if (h[2]) {
-        label = el('text', { 'class': 'score', x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 + 4, 'text-anchor': 'middle' });
-        label.textContent = h[2];
-        gText.appendChild(label);
-      }
-      return { line: line, label: label };
-    });
-    var nodeEls = nodes.map(function (p, idx) {
-      var c = el('circle', { 'class': 'node', cx: p.x, cy: p.y, r: mode === 'group' ? 8 : 7 });
-      c.style.transitionDelay = (idx * 0.03).toFixed(2) + 's, 0s';
-      gNodes.appendChild(c);
-      return c;
-    });
-
-    function play() {
-      var step = reduce ? 0 : 1;
-      nodeEls.forEach(function (c) { c.classList.add('on'); });
-      setTimeout(function () { edges.forEach(function (e) { e.classList.add('on'); }); }, 500 * step);
-      hotEls.forEach(function (h, k) {
-        setTimeout(function () {
-          h.line.style.strokeDashoffset = 0;
-          if (h.label) h.label.classList.add('on');
-        }, (1100 + k * 320) * step);
-      });
-      setTimeout(function () {
-        nodeEls.forEach(function (c, idx) { if (flagged[idx]) c.classList.add('flag'); });
-      }, (1100 + hotEls.length * 320) * step);
-    }
-    return play;
-  }
-
-  /* ---------- Rotating network: traders as points on a slowly turning globe (made-up data) ---------- */
-  function makeGlobe(canvas) {
+  function make3d(canvas, scene) {
     var ctx = canvas.getContext('2d');
-    var COUNT = 16, pts = [], i;
-    for (i = 0; i < COUNT; i++) {
-      var yy = 1 - 2 * (i + 0.5) / COUNT, rr = Math.sqrt(1 - yy * yy), ang = i * 2.399963;
-      pts.push([Math.cos(ang) * rr, yy, Math.sin(ang) * rr]);
-    }
-    var hot = [[1, 6, 91], [3, 11, 84], [8, 14, 77]];
-    var rotY = 0.5, rotX = -0.28, dragging = false, lastX = 0, lastY = 0;
-    var started = null, visible = false, w = 0, h = 0, raf = null;
+    var st = { w: 0, h: 0, rotY: scene.rotY, rotX: scene.rotX, dragY: 0 };
+    var dragging = false, lastX = 0, lastY = 0, started = null, visible = false, raf = null;
 
     function resize() {
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      w = canvas.clientWidth; h = canvas.clientHeight;
-      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      st.w = canvas.clientWidth; st.h = canvas.clientHeight;
+      canvas.width = Math.round(st.w * dpr); canvas.height = Math.round(st.h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-    function project(p) {
-      var cy = Math.cos(rotY), sy = Math.sin(rotY), cx = Math.cos(rotX), sx = Math.sin(rotX);
+    // Turn a point around the vertical axis, then tilt it, then apply perspective.
+    st.project = function (p) {
+      var cy = Math.cos(st.rotY), sy = Math.sin(st.rotY), cx = Math.cos(st.rotX), sx = Math.sin(st.rotX);
       var x = p[0] * cy + p[2] * sy, z = -p[0] * sy + p[2] * cy;
       var y = p[1] * cx - z * sx; z = p[1] * sx + z * cx;
-      var s = 1 / (1 + z * 0.28), R = Math.min(w, h) * 0.4;
-      return { x: w / 2 + x * R * s, y: h / 2 + y * R * s, z: z, s: s };
-    }
+      var s = 1 / (1 + z * 0.26), R = Math.min(st.w, st.h * (scene.aspect || 1)) * scene.scale;
+      return { x: st.w * (scene.centerX || 0.5) + x * R * s, y: st.h * (scene.centerY || 0.5) + y * R * s, z: z, s: s };
+    };
     function draw(now) {
       raf = null;
       if (started === null) started = now;
-      var t = reduce ? 99 : (now - started) / 1000;
+      var t = reduce ? scene.still : (now - started) / 1000;
       var cs = getComputedStyle(canvas);
-      var cNode = cs.getPropertyValue('--blue').trim(), cAmber = cs.getPropertyValue('--amber').trim();
-      var cDot = cs.getPropertyValue('--dot').trim(), cInk = cs.getPropertyValue('--amber-ink').trim(), cBg = cs.getPropertyValue('--paper').trim();
-      var P = pts.map(project), a, b;
-      ctx.clearRect(0, 0, w, h);
-
-      // Every pair is compared: faint lines, fainter at the back.
-      var fade = clamp((t - 0.4) / 0.8, 0, 1);
-      ctx.lineWidth = 1; ctx.strokeStyle = cDot;
-      for (a = 0; a < COUNT; a++) for (b = a + 1; b < COUNT; b++) {
-        ctx.globalAlpha = fade * clamp(0.3 - (P[a].z + P[b].z) * 0.11, 0.04, 0.5);
-        ctx.beginPath(); ctx.moveTo(P[a].x, P[a].y); ctx.lineTo(P[b].x, P[b].y); ctx.stroke();
-      }
-      // The pairs that stand out.
-      var flagged = {};
-      hot.forEach(function (hp, k) {
-        var prog = clamp((t - 1.2 - k * 0.45) / 0.7, 0, 1);
-        if (prog <= 0) return;
-        var p = P[hp[0]], q = P[hp[1]];
-        ctx.globalAlpha = 1; ctx.strokeStyle = cAmber; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + (q.x - p.x) * prog, p.y + (q.y - p.y) * prog); ctx.stroke();
-        if (prog >= 1) { flagged[hp[0]] = flagged[hp[1]] = true; hp.done = true; }
-      });
-      // Points, back to front.
-      P.map(function (p, idx) { return { p: p, idx: idx }; }).sort(function (m, n) { return n.p.z - m.p.z; }).forEach(function (o) {
-        var grow = clamp((t - o.idx * 0.04) / 0.4, 0, 1);
-        ctx.globalAlpha = clamp(0.95 - o.p.z * 0.4, 0.35, 1);
-        ctx.fillStyle = flagged[o.idx] ? cAmber : cNode;
-        ctx.beginPath(); ctx.arc(o.p.x, o.p.y, (flagged[o.idx] ? 7.5 : 6) * o.p.s * grow, 0, Math.PI * 2); ctx.fill();
-      });
-      // Scores on the flagged pairs.
-      ctx.globalAlpha = 1; ctx.font = '700 12px Inter, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      hot.forEach(function (hp) {
-        if (!hp.done) return;
-        var mx = (P[hp[0]].x + P[hp[1]].x) / 2, my = (P[hp[0]].y + P[hp[1]].y) / 2;
-        ctx.lineWidth = 4; ctx.strokeStyle = cBg; ctx.strokeText(hp[2], mx, my);
-        ctx.fillStyle = cInk; ctx.fillText(hp[2], mx, my);
-      });
-
-      if (!dragging && !reduce) rotY += 0.0032;
+      var c = {
+        node: cs.getPropertyValue('--blue').trim(), amber: cs.getPropertyValue('--amber').trim(),
+        dot: cs.getPropertyValue('--dot').trim(), amberInk: cs.getPropertyValue('--amber-ink').trim(),
+        ink: cs.getPropertyValue('--ink').trim(), muted: cs.getPropertyValue('--muted').trim(),
+        rule: cs.getPropertyValue('--rule').trim(), tint: cs.getPropertyValue('--tint').trim(),
+        bg: getComputedStyle(canvas.parentNode).backgroundColor
+      };
+      if (scene.sway) st.rotY = scene.rotY + st.dragY + (reduce ? 0 : Math.sin(t * 0.5) * scene.sway);
+      ctx.clearRect(0, 0, st.w, st.h);
+      ctx.globalAlpha = 1;
+      scene.draw(ctx, st, t, c);
+      if (!scene.sway && !dragging && !reduce) st.rotY += 0.0032;
       if (visible && (!reduce || dragging)) schedule();
     }
     function schedule() { if (raf === null) raf = requestAnimationFrame(draw); }
@@ -234,9 +124,11 @@
     });
     canvas.addEventListener('pointermove', function (e) {
       if (!dragging) return;
-      rotY += (e.clientX - lastX) * 0.008;
-      rotX = clamp(rotX + (e.clientY - lastY) * 0.008, -1.2, 1.2);
+      var dx = (e.clientX - lastX) * 0.008;
+      if (scene.sway) st.dragY = clamp(st.dragY + dx, -1.1, 1.1); else st.rotY += dx;
+      st.rotX = clamp(st.rotX + (e.clientY - lastY) * 0.008, scene.minX, scene.maxX);
       lastX = e.clientX; lastY = e.clientY;
+      schedule();
     });
     var release = function () { dragging = false; };
     canvas.addEventListener('pointerup', release);
@@ -252,17 +144,200 @@
       }, { threshold: 0.15 }).observe(canvas);
     } else { visible = true; schedule(); }
   }
-  document.querySelectorAll('canvas[data-globe]').forEach(makeGlobe);
+
+  function line(ctx, a, b) { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+  function dot(ctx, p, r) { ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill(); }
+
+  /* Group trading: traders as points on a slowly turning globe; a few pairs stand out. */
+  function globeScene() {
+    var COUNT = 16, pts = [], i;
+    for (i = 0; i < COUNT; i++) {
+      var yy = 1 - 2 * (i + 0.5) / COUNT, rr = Math.sqrt(1 - yy * yy), ang = i * 2.399963;
+      pts.push([Math.cos(ang) * rr, yy, Math.sin(ang) * rr]);
+    }
+    var hot = [[1, 6, 91], [3, 11, 84], [8, 14, 77]];
+    return {
+      rotY: 0.5, rotX: -0.28, minX: -1.2, maxX: 1.2, scale: 0.4, still: 99,
+      draw: function (ctx, st, t, c) {
+        var P = pts.map(st.project), a, b;
+        var fade = clamp((t - 0.4) / 0.8, 0, 1);
+        ctx.lineWidth = 1; ctx.strokeStyle = c.dot;
+        for (a = 0; a < COUNT; a++) for (b = a + 1; b < COUNT; b++) {
+          ctx.globalAlpha = fade * clamp(0.3 - (P[a].z + P[b].z) * 0.11, 0.04, 0.5);
+          line(ctx, P[a], P[b]);
+        }
+        var flagged = {}, done = [];
+        hot.forEach(function (hp, k) {
+          var prog = clamp((t - 1.2 - k * 0.45) / 0.7, 0, 1);
+          if (prog <= 0) return;
+          var p = P[hp[0]], q = P[hp[1]];
+          ctx.globalAlpha = 1; ctx.strokeStyle = c.amber; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+          line(ctx, p, { x: p.x + (q.x - p.x) * prog, y: p.y + (q.y - p.y) * prog });
+          if (prog >= 1) { flagged[hp[0]] = flagged[hp[1]] = true; done.push(hp); }
+        });
+        P.map(function (p, idx) { return { p: p, idx: idx }; }).sort(function (m, n) { return n.p.z - m.p.z; }).forEach(function (o) {
+          var grow = clamp((t - o.idx * 0.04) / 0.4, 0, 1);
+          ctx.globalAlpha = clamp(0.95 - o.p.z * 0.4, 0.35, 1);
+          ctx.fillStyle = flagged[o.idx] ? c.amber : c.node;
+          dot(ctx, o.p, (flagged[o.idx] ? 7.5 : 6) * o.p.s * grow);
+        });
+        ctx.globalAlpha = 1; ctx.font = '700 12px Inter, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        done.forEach(function (hp) {
+          var mx = (P[hp[0]].x + P[hp[1]].x) / 2, my = (P[hp[0]].y + P[hp[1]].y) / 2;
+          ctx.lineWidth = 4; ctx.strokeStyle = c.bg; ctx.strokeText(hp[2], mx, my);
+          ctx.fillStyle = c.amberInk; ctx.fillText(hp[2], mx, my);
+        });
+      }
+    };
+  }
+
+  /* Linked accounts: accounts on an upper layer; lines drop to a lower layer,
+     and the accounts that land on the same point below turn out to be linked. */
+  function layersScene() {
+    var rand = seeded(29), TOP = -0.42, LOW = 0.52, HALF = 0.95;
+    var accounts = [], i;
+    for (i = 0; i < 16; i++) {
+      accounts.push({
+        x: -0.68 + (i % 4) * 0.45 + (rand() - 0.5) * 0.2,
+        z: -0.68 + Math.floor(i / 4) * 0.45 + (rand() - 0.5) * 0.2,
+        group: -1
+      });
+    }
+    var groups = [[1, 5, 6], [3, 7], [8, 9, 13]];
+    var hubs = groups.map(function (g, k) {
+      var hx = 0, hz = 0;
+      g.forEach(function (idx) { accounts[idx].group = k; hx += accounts[idx].x; hz += accounts[idx].z; });
+      return { x: hx / g.length, z: hz / g.length };
+    });
+    function plane(ctx, st, y, c, alpha) {
+      var q = [[-HALF, y, -HALF], [HALF, y, -HALF], [HALF, y, HALF], [-HALF, y, HALF]].map(st.project);
+      ctx.beginPath(); ctx.moveTo(q[0].x, q[0].y);
+      for (var k = 1; k < 4; k++) ctx.lineTo(q[k].x, q[k].y);
+      ctx.closePath();
+      ctx.globalAlpha = alpha; ctx.fillStyle = c.tint; ctx.fill();
+      ctx.globalAlpha = 1; ctx.strokeStyle = c.rule; ctx.lineWidth = 1.2; ctx.stroke();
+    }
+    return {
+      rotY: 0.6, rotX: -0.5, minX: -1.1, maxX: -0.12, scale: 0.43, still: 99, centerY: 0.5,
+      draw: function (ctx, st, t, c) {
+        plane(ctx, st, LOW, c, 0.75);
+        // Lines dropping from each account.
+        accounts.forEach(function (a, idx) {
+          var drop = clamp((t - 0.7 - idx * 0.04) / 0.7, 0, 1);
+          if (drop <= 0) return;
+          var top = st.project([a.x, TOP, a.z]);
+          var linked = a.group >= 0, lit = linked && t > 2.0 + a.group * 0.5;
+          var end = linked ? hubs[a.group] : a;
+          var low = st.project([a.x + (end.x - a.x) * drop, TOP + (LOW - TOP) * drop, a.z + (end.z - a.z) * drop]);
+          ctx.globalAlpha = lit ? 1 : 0.55;
+          ctx.strokeStyle = lit ? c.amber : c.dot; ctx.lineWidth = lit ? 2.4 : 1.1; ctx.lineCap = 'round';
+          line(ctx, top, low);
+          if (!linked && drop >= 1) { ctx.fillStyle = c.dot; ctx.globalAlpha = 0.8; dot(ctx, low, 2.6 * low.s); }
+        });
+        // Shared points on the lower layer.
+        hubs.forEach(function (hb, k) {
+          var on = clamp((t - 2.0 - k * 0.5) / 0.35, 0, 1);
+          if (on <= 0) return;
+          var p = st.project([hb.x, LOW, hb.z]);
+          ctx.globalAlpha = 0.25 * on; ctx.fillStyle = c.amber; dot(ctx, p, 15 * p.s * on);
+          ctx.globalAlpha = 1; dot(ctx, p, 6.5 * p.s * on);
+        });
+        plane(ctx, st, TOP, c, 0.45);
+        // Accounts on the upper layer.
+        accounts.map(function (a, idx) { return { a: a, idx: idx, p: st.project([a.x, TOP, a.z]) }; })
+          .sort(function (m, n) { return n.p.z - m.p.z; }).forEach(function (o) {
+            var grow = clamp((t - o.idx * 0.035) / 0.4, 0, 1);
+            var lit = o.a.group >= 0 && t > 2.0 + o.a.group * 0.5;
+            ctx.globalAlpha = 1; ctx.fillStyle = lit ? c.amber : c.node;
+            dot(ctx, o.p, (lit ? 7.5 : 6) * o.p.s * grow);
+          });
+      }
+    };
+  }
+
+  /* Trading-rule review: trades flow through a row of rule gates.
+     Most pass; now and then one is stopped at a gate and flagged. */
+  function gatesScene() {
+    var RULES = ['Risk per trade', 'Martingale', 'Hedging', 'Copy trading', 'One-sided', 'Margin'];
+    var GX = RULES.map(function (r, i) { return -1.05 + i * 0.42; });
+    var START = -1.5, END = 1.5, SPEED = 0.62, EVERY = 0.42, G = 0.4;
+    function stopGate(i) { return i % 5 === 2 ? (Math.floor(i / 5) * 5 + 1) % RULES.length : -1; }
+    return {
+      rotY: -0.36, rotX: -0.2, minX: -0.9, maxX: 0.15, scale: 0.385, aspect: 1.5, sway: 0.1, still: 9.8, centerY: 0.44, centerX: 0.54,
+      draw: function (ctx, st, t, c) {
+        var items = [], flash = {};
+        // Trades: position depends only on time, so the scene needs no stored state.
+        var first = Math.floor((t - 8) / EVERY), last = Math.floor(t / EVERY);
+        for (var i = Math.max(0, first); i <= last; i++) {
+          var age = t - i * EVERY, g = stopGate(i), x = START + age * SPEED, y = 0, alpha = 1, flagged = false;
+          if (g >= 0) {
+            var tStop = (GX[g] - 0.05 - START) / SPEED;
+            if (age >= tStop) {
+              var since = age - tStop;
+              x = GX[g] - 0.05; flagged = true;
+              y = -0.66 * clamp(since / 0.45, 0, 1);
+              alpha = 1 - clamp((since - 1.7) / 0.5, 0, 1);
+              if (since < 1.7) flash[g] = 1 - clamp((since - 1.1) / 0.6, 0, 1);
+            }
+          }
+          if (!flagged) alpha = clamp((x - START) / 0.2, 0, 1) * (1 - clamp((x - (END - 0.25)) / 0.25, 0, 1));
+          if (x > END || alpha <= 0) continue;
+          items.push({ kind: 'trade', p: st.project([x, y, 0]), flagged: flagged, alpha: alpha });
+        }
+        GX.forEach(function (gx, k) {
+          items.push({ kind: 'gate', k: k, p: st.project([gx, 0, 0]), q: [[gx, -G, -G], [gx, -G, G], [gx, G, G], [gx, G, -G]].map(st.project) });
+        });
+        // The path the trades follow.
+        ctx.globalAlpha = 0.6; ctx.strokeStyle = c.rule; ctx.lineWidth = 1.2; ctx.setLineDash([4, 5]);
+        line(ctx, st.project([START, 0, 0]), st.project([END, 0, 0]));
+        ctx.setLineDash([]);
+
+        var appear = function (k) { return clamp((t - k * 0.12) / 0.5, 0, 1); };
+        items.sort(function (m, n) { return n.p.z - m.p.z; }).forEach(function (it) {
+          if (it.kind === 'gate') {
+            var f = flash[it.k] || 0, a = appear(it.k);
+            ctx.beginPath(); ctx.moveTo(it.q[0].x, it.q[0].y);
+            for (var k = 1; k < 4; k++) ctx.lineTo(it.q[k].x, it.q[k].y);
+            ctx.closePath();
+            ctx.globalAlpha = 0.5 * a; ctx.fillStyle = f > 0 ? c.amber : c.tint;
+            if (f > 0) ctx.globalAlpha = (0.12 + 0.2 * f) * a;
+            ctx.fill();
+            ctx.globalAlpha = a; ctx.strokeStyle = f > 0.05 ? c.amber : c.muted; ctx.lineWidth = f > 0.05 ? 2.4 : 1.4; ctx.lineJoin = 'round';
+            ctx.stroke();
+          } else {
+            var r = (it.flagged ? 7 : 5.5) * it.p.s;
+            ctx.globalAlpha = it.alpha; ctx.fillStyle = it.flagged ? c.amber : c.node;
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(it.p.x - r, it.p.y - r, r * 2, r * 2, 2.5); else ctx.rect(it.p.x - r, it.p.y - r, r * 2, r * 2);
+            ctx.fill();
+          }
+        });
+        // Rule names under the gates, on two rows so they never collide.
+        ctx.font = '600 11px Inter, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        GX.forEach(function (gx, k) {
+          var foot = st.project([gx, G, 0]), f = flash[k] || 0;
+          var ly = foot.y + 9 + (k % 2 ? 16 : 0);
+          ctx.globalAlpha = appear(k) * 0.7; ctx.strokeStyle = c.rule; ctx.lineWidth = 1;
+          line(ctx, { x: foot.x, y: foot.y + 3 }, { x: foot.x, y: ly - 2 });
+          ctx.globalAlpha = appear(k);
+          ctx.lineWidth = 4; ctx.strokeStyle = c.bg; ctx.strokeText(RULES[k], foot.x, ly);
+          ctx.fillStyle = f > 0.05 ? c.amberInk : c.muted; ctx.fillText(RULES[k], foot.x, ly);
+        });
+      }
+    };
+  }
+
+  var SCENES = { globe: globeScene, layers: layersScene, gates: gatesScene };
+  document.querySelectorAll('canvas[data-scene]').forEach(function (canvas) {
+    var build = SCENES[canvas.dataset.scene];
+    if (build) make3d(canvas, build());
+  });
 
   /* ---------- Reveal on scroll, and start charts when they come into view ---------- */
-  var plays = new Map();
-  document.querySelectorAll('svg[data-net]').forEach(function (svg) { plays.set(svg, drawNetwork(svg)); });
-
-  var watched = document.querySelectorAll('[data-reveal], [data-viz], [data-roll], svg[data-net]');
+  var watched = document.querySelectorAll('[data-reveal], [data-roll]');
   function activate(node) {
     node.classList.add('in');
     if (node.hasAttribute('data-roll') && !reduce) setTimeout(function () { playRoll(node); }, 350);
-    if (plays.has(node)) plays.get(node)();
   }
   if ('IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (entries) {
