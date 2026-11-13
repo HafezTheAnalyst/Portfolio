@@ -15,7 +15,7 @@
       d.classList.add('js');
       var t = null;
       try { t = localStorage.getItem('theme'); } catch (e) {}
-      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      if (t !== 'light' && t !== 'dark') t = 'dark';
       d.dataset.theme = t;
     })();
   </script>
