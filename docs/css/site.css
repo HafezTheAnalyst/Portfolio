@@ -502,3 +502,19 @@ html.snap { scroll-snap-type: y mandatory; scroll-padding-top: 62px; }
 @media (max-width: 359px) {
   .checks .flag::after, .checks .missed::after { display: none; }
 }
+
+/* Tools page: one card per group, each tool with its icon */
+.toolgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 28px; }
+.toolset { padding: 18px 20px; border: 1px solid var(--rule); border-radius: 14px; background: var(--paper); }
+.toolset h3 { font-size: 1.02rem; margin-bottom: 12px; }
+.toolset ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.toolset li { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border: 1px solid var(--rule); border-radius: 999px; font-size: 0.92rem; line-height: 1.25; }
+.toolset svg { flex: none; width: 28px; height: 28px; padding: 5px; border-radius: 50%; background: var(--tint); color: var(--blue); }
+@media (max-width: 760px) { .toolgrid { grid-template-columns: 1fr; } }
+
+/* Contact on its own page, with profile links */
+.contact.solo { max-width: 760px; padding: 0; }
+.socials { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.social { display: inline-flex; align-items: center; gap: 10px; padding: 11px 18px 11px 12px; border: 1px solid var(--rule); border-radius: 12px; background: var(--paper); color: var(--ink); font-weight: 650; text-decoration: none; transition: border-color 0.15s, transform 0.2s, color 0.15s; }
+.social svg { width: 22px; height: 22px; color: var(--blue); }
+.social:hover { border-color: var(--blue); transform: translateY(-2px); }
