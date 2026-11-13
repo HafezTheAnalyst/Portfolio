@@ -265,7 +265,8 @@
   document.querySelectorAll('[data-race]').forEach(function (root) {
     var manual = root.querySelector('.lane.manual'), auto = root.querySelector('.lane.auto');
     var result = root.querySelector('.race-result');
-    var MARGIN = 5, timers = [], run = 0, visible = false, playing = false;
+    var CAUGHT = { 2: true, 5: true };   // hedging and margin: breaches that the manual review lets through
+    var timers = [], run = 0, visible = false, playing = false;
     function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
     function fmt(sec) { var m = Math.floor(sec / 60), s = Math.floor(sec % 60); return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
     function items(lane) { return lane.querySelectorAll('.checks li'); }
@@ -283,11 +284,11 @@
       result.classList.remove('show');
     }
     // Run one lane: each rule is checked in turn while the clock counts up to `seconds`.
-    function runLane(lane, seconds, ms, marginState) {
+    function runLane(lane, seconds, ms, caughtState) {
       var mine = run, start = performance.now(), list = items(lane), step = ms / list.length;
       list.forEach(function (li, i) {
         at(i * step, function () { li.className = 'checking'; });
-        at((i + 1) * step, function () { li.className = i === MARGIN ? marginState : 'ok'; });
+        at((i + 1) * step, function () { li.className = CAUGHT[i] ? caughtState : 'ok'; });
       });
       (function tick(now) {
         if (mine !== run) return;
@@ -297,7 +298,7 @@
       })(start);
     }
     function showEnd() {
-      items(manual)[MARGIN].className = 'missed';
+      items(manual).forEach(function (li, i) { if (CAUGHT[i]) li.className = 'missed'; });
       result.classList.add('show');
     }
     function play() {
@@ -305,14 +306,14 @@
       reset();
       at(500, function () {
         runLane(auto, 120, 600, 'flag');      // about 2 minutes
-        runLane(manual, 1200, 6000, 'ok');    // about 20 minutes, and the margin breach goes through
+        runLane(manual, 1200, 6000, 'ok');    // about 20 minutes, and the two breaches go through
       });
       at(7100, showEnd);
       at(11500, function () { playing = false; if (visible) play(); });
     }
     function still() {
       [[manual, 1200, 'missed'], [auto, 120, 'flag']].forEach(function (cfg) {
-        items(cfg[0]).forEach(function (li, i) { li.className = i === MARGIN ? cfg[2] : 'ok'; });
+        items(cfg[0]).forEach(function (li, i) { li.className = CAUGHT[i] ? cfg[2] : 'ok'; });
         setLane(cfg[0], cfg[1], 1);
         cfg[0].classList.add('done');
       });
