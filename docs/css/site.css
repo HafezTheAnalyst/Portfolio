@@ -531,3 +531,18 @@ html.snap { scroll-snap-type: y mandatory; scroll-padding-top: 62px; }
   #experience .certs { grid-auto-rows: auto; max-height: none; }
   #experience .certs img { width: 72px; height: 54px; }
 }
+
+/* Contact page: message on the left, photo and quick facts on the right */
+.contact-wrap { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 96px); align-items: center; }
+.me { padding: 28px; border: 1px solid var(--rule); border-radius: 18px; background: var(--paper); text-align: center; max-width: 380px; justify-self: end; width: 100%; }
+.me img { width: 168px; height: 168px; border-radius: 50%; object-fit: cover; border: 4px solid var(--surface); box-shadow: 0 0 0 2px var(--amber); margin: 0 auto 16px; display: block; }
+.me-name { margin-bottom: 18px; }
+.me-name strong { display: block; font-size: 1.25rem; }
+.me-name span { color: var(--muted); }
+.me-facts { list-style: none; display: grid; gap: 10px; text-align: left; padding-top: 18px; border-top: 1px solid var(--rule); }
+.me-facts li { display: flex; align-items: center; gap: 12px; font-size: 0.97rem; }
+.me-facts svg { flex: none; width: 30px; height: 30px; padding: 6px; border-radius: 50%; background: var(--tint); color: var(--blue); }
+@media (max-width: 900px) {
+  .contact-wrap { grid-template-columns: 1fr; }
+  .me { justify-self: start; }
+}
