@@ -191,74 +191,98 @@
     };
   }
 
-  /* Linked accounts: accounts on an upper layer; lines drop to a lower layer,
-     and the accounts that land on the same point below turn out to be linked. */
-  function layersScene() {
-    var rand = seeded(29), TOP = -0.42, LOW = 0.52, HALF = 0.95;
-    var accounts = [], i;
-    for (i = 0; i < 16; i++) {
-      accounts.push({
-        x: -0.68 + (i % 4) * 0.45 + (rand() - 0.5) * 0.2,
-        z: -0.68 + Math.floor(i / 4) * 0.45 + (rand() - 0.5) * 0.2,
-        group: -1
-      });
-    }
-    var groups = [[1, 5, 6], [3, 7], [8, 9, 13]];
-    var hubs = groups.map(function (g, k) {
-      var hx = 0, hz = 0;
-      g.forEach(function (idx) { accounts[idx].group = k; hx += accounts[idx].x; hz += accounts[idx].z; });
-      return { x: hx / g.length, z: hz / g.length };
-    });
-    function plane(ctx, st, y, c, alpha) {
-      var q = [[-HALF, y, -HALF], [HALF, y, -HALF], [HALF, y, HALF], [-HALF, y, HALF]].map(st.project);
-      ctx.beginPath(); ctx.moveTo(q[0].x, q[0].y);
-      for (var k = 1; k < 4; k++) ctx.lineTo(q[k].x, q[k].y);
-      ctx.closePath();
-      ctx.globalAlpha = alpha; ctx.fillStyle = c.tint; ctx.fill();
-      ctx.globalAlpha = 1; ctx.strokeStyle = c.rule; ctx.lineWidth = 1.2; ctx.stroke();
-    }
-    return {
-      rotY: 0.6, rotX: -0.5, minX: -1.1, maxX: -0.12, scale: 0.43, still: 99, centerY: 0.5,
-      draw: function (ctx, st, t, c) {
-        plane(ctx, st, LOW, c, 0.75);
-        // Lines dropping from each account.
-        accounts.forEach(function (a, idx) {
-          var drop = clamp((t - 0.7 - idx * 0.04) / 0.7, 0, 1);
-          if (drop <= 0) return;
-          var top = st.project([a.x, TOP, a.z]);
-          var linked = a.group >= 0, lit = linked && t > 2.0 + a.group * 0.5;
-          var end = linked ? hubs[a.group] : a;
-          var low = st.project([a.x + (end.x - a.x) * drop, TOP + (LOW - TOP) * drop, a.z + (end.z - a.z) * drop]);
-          ctx.globalAlpha = lit ? 1 : 0.55;
-          ctx.strokeStyle = lit ? c.amber : c.dot; ctx.lineWidth = lit ? 2.4 : 1.1; ctx.lineCap = 'round';
-          line(ctx, top, low);
-          if (!linked && drop >= 1) { ctx.fillStyle = c.dot; ctx.globalAlpha = 0.8; dot(ctx, low, 2.6 * low.s); }
-        });
-        // Shared points on the lower layer.
-        hubs.forEach(function (hb, k) {
-          var on = clamp((t - 2.0 - k * 0.5) / 0.35, 0, 1);
-          if (on <= 0) return;
-          var p = st.project([hb.x, LOW, hb.z]);
-          ctx.globalAlpha = 0.25 * on; ctx.fillStyle = c.amber; dot(ctx, p, 15 * p.s * on);
-          ctx.globalAlpha = 1; dot(ctx, p, 6.5 * p.s * on);
-        });
-        plane(ctx, st, TOP, c, 0.45);
-        // Accounts on the upper layer.
-        accounts.map(function (a, idx) { return { a: a, idx: idx, p: st.project([a.x, TOP, a.z]) }; })
-          .sort(function (m, n) { return n.p.z - m.p.z; }).forEach(function (o) {
-            var grow = clamp((t - o.idx * 0.035) / 0.4, 0, 1);
-            var lit = o.a.group >= 0 && t > 2.0 + o.a.group * 0.5;
-            ctx.globalAlpha = 1; ctx.fillStyle = lit ? c.amber : c.node;
-            dot(ctx, o.p, (lit ? 7.5 : 6) * o.p.s * grow);
-          });
-      }
-    };
-  }
-
-  var SCENES = { globe: globeScene, layers: layersScene };
+  var SCENES = { globe: globeScene };
   document.querySelectorAll('canvas[data-scene]').forEach(function (canvas) {
     var build = SCENES[canvas.dataset.scene];
     if (build) make3d(canvas, build());
+  });
+
+  /* ---------- The reveal: accounts that look separate turn out to belong to fewer people ---------- */
+  document.querySelectorAll('[data-linked]').forEach(function (root) {
+    var stage = root.querySelector('.linked-stage');
+    var NAMES = ['KM', 'SL', 'AR', 'TN', 'JB', 'OD', 'EH', 'PV', 'MC', 'YS', 'RF', 'LW'];
+    var IDS = [1042, 2718, 3391, 4406, 5127, 6093, 7254, 8810, 9365, 1587, 2940, 3672];
+    // Cards are listed in their final order: three groups on the left of each row, single traders after them.
+    var GROUPS = [[0, 1, 2], [4, 5], [8, 9, 10]];
+    var START = [0, 5, 10, 1, 4, 9, 3, 6, 2, 7, 11, 8];   // where each card sits before regrouping
+    var COLS = 4, timers = [], visible = false, playing = false;
+    function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
+    function place(card, slot) { card.style.setProperty('--c', slot % COLS); card.style.setProperty('--r', Math.floor(slot / COLS)); }
+    function centre(slot) { return { x: ((slot % COLS) * 25.5 + 11.75) * 4, y: (Math.floor(slot / COLS) * 36 + 9.6) * 2.7 }; }
+
+    var svg = el('svg', { viewBox: '0 0 400 270', 'aria-hidden': 'true' });
+    stage.appendChild(svg);
+    var lines = GROUPS.map(function (g) {
+      var out = [];
+      for (var i = 0; i < g.length - 1; i++) {
+        var p = centre(START[g[i]]), q = centre(START[g[i + 1]]);
+        var d = Math.hypot(q.x - p.x, q.y - p.y), ux = (q.x - p.x) / d * 14, uy = (q.y - p.y) / d * 14;   // stop at the edge of each badge
+        var ln = el('line', { x1: p.x + ux, y1: p.y + uy, x2: q.x - ux, y2: q.y - uy, pathLength: 1 });
+        svg.appendChild(ln); out.push(ln);
+      }
+      return out;
+    });
+    GROUPS.forEach(function (g) {
+      var band = document.createElement('div');
+      band.className = 'grp';
+      band.style.setProperty('--r', Math.floor(g[0] / COLS));
+      band.style.setProperty('--n', g.length);
+      band.innerHTML = '<span>' + g.length + ' accounts, 1 person</span>';
+      stage.appendChild(band);
+    });
+    var cards = NAMES.map(function (name, i) {
+      var card = document.createElement('div');
+      card.className = 'acct';
+      card.innerHTML = '<b>' + name + '</b><small>AC-' + IDS[i] + '</small>';
+      stage.appendChild(card);
+      return card;
+    });
+    var scan = document.createElement('div');
+    scan.className = 'scan';
+    stage.appendChild(scan);
+
+    function reset() {
+      timers.forEach(clearTimeout); timers = [];
+      root.classList.remove('found', 'grouped');
+      scan.className = 'scan';
+      lines.forEach(function (set) { set.forEach(function (ln) { ln.classList.remove('on'); }); });
+      cards.forEach(function (card, i) {
+        card.style.transitionDuration = '0s';
+        card.className = 'acct';
+        place(card, START[i]);
+      });
+      stage.getBoundingClientRect();
+      cards.forEach(function (card) { card.style.transitionDuration = ''; });
+    }
+    function linkUp(k) {
+      GROUPS[k].forEach(function (i) { cards[i].classList.add('hit'); });
+      lines[k].forEach(function (ln, n) { setTimeout(function () { ln.classList.add('on'); }, n * 200); });
+    }
+    function regroup() {
+      root.classList.add('grouped', 'found');
+      cards.forEach(function (card, i) { place(card, i); });
+    }
+    function play() {
+      playing = true;
+      reset();
+      cards.forEach(function (card, i) { at(250 + START[i] * 45, function () { card.classList.add('in'); }); });
+      at(1500, function () { scan.classList.add('go'); });
+      at(2800, function () { scan.classList.add('done'); });
+      GROUPS.forEach(function (g, k) { at(3000 + k * 450, function () { linkUp(k); }); });
+      at(5000, regroup);
+      at(10500, function () { playing = false; if (visible) play(); });
+    }
+    function still() {
+      cards.forEach(function (card, i) { card.classList.add('in'); place(card, i); });
+      GROUPS.forEach(function (g) { g.forEach(function (i) { cards[i].classList.add('hit'); }); });
+      root.classList.add('grouped', 'found');
+    }
+    if (reduce || !('IntersectionObserver' in window)) { still(); return; }
+    cards.forEach(function (card, i) { place(card, START[i]); });
+    new IntersectionObserver(function (entries) {
+      visible = entries[0].isIntersecting;
+      if (visible && !playing) play();
+    }, { threshold: 0.35 }).observe(root);
   });
 
   /* ---------- The race: manual review against automated review of the same account ---------- */
