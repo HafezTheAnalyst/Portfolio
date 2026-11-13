@@ -222,7 +222,7 @@
       root.classList.toggle('snap', on);
       if (!on) return;
       var avail = window.innerHeight - HEADER - PAD;
-      var zooms = shells.map(function (sh) { return Math.min(1, avail / sh.offsetHeight); });
+      var zooms = shells.map(function (sh) { return sh.parentNode.hasAttribute('data-nofit') ? 1 : Math.min(1, avail / sh.offsetHeight); });
       if (Math.min.apply(null, zooms) < MIN_ZOOM) { root.classList.remove('snap'); return; }
       shells.forEach(function (sh, i) { if (zooms[i] < 1) sh.style.zoom = zooms[i].toFixed(3); });
     };
@@ -271,21 +271,22 @@
     });
   }
 
-  /* ---------- Headline: words arrive one after another ---------- */
-  var headline = document.getElementById('headline');
-  if (headline && !reduce) {
-    var label = headline.textContent;
-    headline.setAttribute('aria-label', label);
-    headline.innerHTML = label.split(' ').map(function (w, i) {
-      return '<span class="w" aria-hidden="true" style="animation-delay:' + (0.15 + i * 0.07).toFixed(2) + 's">' + w + '</span>';
-    }).join(' ');
+  /* ---------- Hero name: letters rise one after another ---------- */
+  var nameEl = document.getElementById('name');
+  if (nameEl && !reduce) {
+    var n = 0;
+    nameEl.querySelectorAll('span').forEach(function (word) {
+      word.innerHTML = word.textContent.split('').map(function (ch) {
+        return '<span class="ch" aria-hidden="true" style="animation-delay:' + (0.1 + (n++) * 0.045).toFixed(3) + 's">' + ch + '</span>';
+      }).join('');
+    });
   }
 
   /* ---------- Risk desk: a simulated price chart with trades, flags and live counters ---------- */
   var svg = document.getElementById('candles');
   if (!svg) return;
 
-  var W = 560, H = 270, PADR = 44, TOP = 26, BOT = 26;
+  var W = 560, H = 240, PADR = 44, TOP = 24, BOT = 22;
   var N = 40, STEP = (W - PADR) / N, BW = STEP * 0.62;
   var lo = 1.0740, hi = 1.0860;
   function py(p) { return TOP + (1 - (p - lo) / (hi - lo)) * (H - TOP - BOT); }
