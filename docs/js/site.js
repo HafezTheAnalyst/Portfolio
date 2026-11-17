@@ -197,6 +197,46 @@
     if (build) make3d(canvas, build());
   });
 
+  /* ---------- Marketing funnel: visitors narrow to clients, then cost per client by month ---------- */
+  document.querySelectorAll('[data-funnel]').forEach(function (root) {
+    var rows = root.querySelectorAll('.fn-row'), rates = root.querySelectorAll('.fn-rate');
+    var months = root.querySelectorAll('.fn-months div'), over = root.querySelector('.fn-months .over');
+    var nums = root.querySelectorAll('.fn-row b'), timers = [], visible = false, playing = false;
+    function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
+    function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
+    function count(el) {
+      var to = +el.dataset.to, t0 = performance.now();
+      (function step(t) {
+        var p = Math.min(1, (t - t0) / 800);
+        el.textContent = fmt(to * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(step);
+      })(t0);
+    }
+    function reset() {
+      timers.forEach(clearTimeout); timers = [];
+      root.querySelectorAll('.on, .flag').forEach(function (e) { e.classList.remove('on', 'flag'); });
+    }
+    function play() {
+      playing = true; reset();
+      rows.forEach(function (r, i) {
+        at(200 + i * 700, function () { r.classList.add('on'); count(nums[i]); });
+        if (rates[i]) at(650 + i * 700, function () { rates[i].classList.add('on'); });
+      });
+      months.forEach(function (m, i) { at(2500 + i * 220, function () { m.classList.add('on'); }); });
+      at(4100, function () { over.classList.add('flag'); });
+      at(9500, function () { playing = false; if (visible) play(); });
+    }
+    function still() {
+      root.querySelectorAll('.fn-row, .fn-rate, .fn-months div').forEach(function (e) { e.classList.add('on'); });
+      over.classList.add('flag');
+    }
+    if (reduce || !('IntersectionObserver' in window)) { still(); return; }
+    new IntersectionObserver(function (entries) {
+      visible = entries[0].isIntersecting;
+      if (visible && !playing) play();
+    }, { threshold: 0.35 }).observe(root);
+  });
+
   /* ---------- The reveal: accounts that look separate turn out to belong to fewer people ---------- */
   document.querySelectorAll('[data-linked]').forEach(function (root) {
     var stage = root.querySelector('.linked-stage');

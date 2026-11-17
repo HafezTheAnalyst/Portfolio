@@ -546,3 +546,37 @@ html.snap { scroll-snap-type: y mandatory; scroll-padding-top: 62px; }
   .contact-wrap { grid-template-columns: 1fr; }
   .me { justify-self: start; }
 }
+
+/* Marketing funnel: visitors narrow to clients, then cost per client by month against a target */
+.funnel { display: grid; gap: 18px; }
+.fn-rows { display: grid; gap: 4px; }
+.fn-row { position: relative; display: grid; grid-template-columns: 104px 1fr 64px; align-items: center; gap: 10px; height: 40px; }
+.fn-track { position: relative; height: 100%; }
+.fn-bar { position: absolute; top: 0; bottom: 0; left: 50%; width: var(--w); transform: translateX(-50%) scaleX(0); border-radius: 10px; background: var(--tint); border: 1px solid color-mix(in srgb, var(--blue) 40%, transparent); transition: transform 0.9s cubic-bezier(0.3, 0.7, 0.2, 1); }
+.fn-row:last-of-type .fn-bar { background: color-mix(in srgb, var(--amber) 22%, var(--surface)); border-color: var(--amber); }
+.fn-label, .fn-row b { position: relative; z-index: 1; opacity: 0; transition: opacity 0.4s 0.4s; }
+.fn-label { font-size: 0.86rem; color: var(--muted); }
+.fn-row b { text-align: right; }
+.fn-row b { font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.fn-rate { margin: 0 64px 0 104px; padding: 0 10px; text-align: center; font-size: 0.74rem; font-weight: 650; color: var(--blue-deep); opacity: 0; transition: opacity 0.4s; }
+.funnel .on .fn-bar { transform: translateX(-50%) scaleX(1); }
+.funnel .on .fn-label, .funnel .on b, .funnel .fn-rate.on { opacity: 1; }
+.fn-cost { padding-top: 14px; border-top: 1px solid var(--rule); }
+.fn-cost-title { display: flex; justify-content: space-between; margin: 0 0 10px; font-size: 0.82rem; font-weight: 650; }
+.fn-cost-title span { color: var(--amber-ink); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.fn-cost-title span::before { content: ""; width: 16px; border-top: 2px dashed var(--amber); }
+.fn-months { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; height: 96px; margin-top: 26px; align-items: end; padding-bottom: 18px; }
+.fn-months div { position: relative; height: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.fn-months i { display: block; width: 62%; height: var(--h); border-radius: 5px 5px 2px 2px; background: var(--blue); transform: scaleY(0); transform-origin: bottom; transition: transform 0.55s cubic-bezier(0.3, 0.7, 0.2, 1), background-color 0.3s; }
+.fn-months small { position: absolute; bottom: -18px; font-size: 0.68rem; color: var(--muted); }
+.fn-months .on i { transform: none; }
+.fn-months .over.flag i { background: var(--amber); }
+.fn-months em { position: absolute; bottom: calc(var(--h) + 6px); left: 50%; transform: translate(-50%, 4px); white-space: nowrap; font-style: normal; font-size: 0.66rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--amber); color: #14213d; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 2; }
+.fn-months .over.flag em { opacity: 1; transform: translate(-50%, 0); }
+.fn-target { position: absolute; left: 0; right: 0; bottom: calc(18px + 78px * 0.78); border-top: 2px dashed var(--amber); opacity: 0.85; pointer-events: none; }
+@media (max-width: 420px) {
+  .fn-row { grid-template-columns: 82px 1fr 52px; gap: 8px; }
+  .fn-label { font-size: 0.78rem; }
+  .fn-row b { font-size: 0.95rem; }
+  .fn-rate { margin: 0; white-space: nowrap; }
+}
