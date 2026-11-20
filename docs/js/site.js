@@ -453,6 +453,43 @@
     screens.forEach(function (s) { spy.observe(s); });
   }
 
+  /* ---------- Top menu follows the reader: highlight the section on screen ---------- */
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('.top nav a'));
+  var navMap = navLinks.map(function (a) {
+    var id = (a.getAttribute('href') || '').split('#')[1];
+    var ids = id === 'work' ? ['work', 'work-2', 'work-3', 'work-4'] : [id];
+    return { a: a, els: ids.map(function (i) { return document.getElementById(i); }).filter(Boolean) };
+  }).filter(function (m) { return m.els.length; });
+  if (navMap.length) {
+    var nav = document.querySelector('.top nav'), navTick = false, lastKey = '';
+    var markNav = function () {
+      navTick = false;
+      var line = window.innerHeight * 0.4, atEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+      var on = navMap.map(function (m) {
+        if (atEnd) return m.els.some(function (e) { return e.id === 'contact'; });
+        return m.els.some(function (e) { var r = e.getBoundingClientRect(); return r.top <= line && r.bottom > line; });
+      });
+      var key = on.join();
+      if (key === lastKey) return;
+      lastKey = key;
+      navMap.forEach(function (m, i) {
+        m.a.classList.toggle('current', on[i]);
+        if (on[i]) m.a.setAttribute('aria-current', 'true'); else m.a.removeAttribute('aria-current');
+      });
+      // On a phone the menu scrolls sideways: keep the highlighted item in view.
+      var first = navMap[on.indexOf(true)];
+      if (first && nav.scrollWidth > nav.clientWidth) {
+        var x = first.a.offsetLeft - (nav.clientWidth - first.a.offsetWidth) / 2;
+        nav.scrollTo({ left: Math.max(0, x), behavior: reduce ? 'auto' : 'smooth' });
+      }
+    };
+    var askNav = function () { if (!navTick) { navTick = true; requestAnimationFrame(markNav); } };
+    window.addEventListener('scroll', askNav, { passive: true });
+    window.addEventListener('resize', askNav);
+    window.addEventListener('load', askNav);
+    markNav();
+  }
+
   /* ---------- Full-screen mode: one scroll step moves one full section ---------- */
   if (root.classList.contains('home') && screens.length) {
     var HEADER = 62, PAD = 40, MIN_ZOOM = 0.7, lockedUntil = 0, lastWheel = 0;
